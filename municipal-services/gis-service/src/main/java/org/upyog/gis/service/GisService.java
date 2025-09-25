@@ -10,12 +10,12 @@ import org.springframework.web.multipart.MultipartFile;
 public interface GisService {
 
     /**
-     * Find zone information from polygon file
+     * Find zone information from geometry file (polygon, line, or point)
      *
-     * @param file the polygon file (KML)
+     * @param file the geometry file (KML)
      * @param gisRequestWrapper the GIS request wrapper containing RequestInfo and GIS request data
      * @return response containing district, zone, and WFS response
      * @throws Exception if processing fails
      */
-    GISResponse findZoneFromPolygon(MultipartFile file, GISRequestWrapper gisRequestWrapper) throws Exception;
+    GISResponse findZoneFromGeometry(MultipartFile file, GISRequestWrapper gisRequestWrapper) throws Exception;
 }

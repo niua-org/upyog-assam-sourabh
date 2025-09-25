@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.upyog.gis.client.FilestoreClient;
 import org.upyog.gis.config.GisProperties;
-import org.upyog.gis.entity.GisLog;
+import org.upyog.gis.model.GisLog;
 import org.upyog.gis.model.GISResponse;
 import org.upyog.gis.model.GISRequestWrapper;
 import org.upyog.gis.model.GISRequest;
@@ -19,14 +19,14 @@ import org.upyog.gis.util.KmlParser;
 import org.upyog.gis.wfs.WfsClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKTWriter;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Service implementation for GIS operations such as finding zone information from polygon files,
@@ -42,7 +42,6 @@ public class GisServiceImpl implements GisService {
 
     private static final String STATUS_SUCCESS = "SUCCESS";
     private static final String STATUS_FAILURE = "FAILURE";
-    private static final String STATUS_PENDING = "PENDING";
 
     private final WfsClient wfsClient;
     private final GisLogRepository logRepository;
@@ -51,19 +50,18 @@ public class GisServiceImpl implements GisService {
     private final FilestoreClient filestoreClient;
 
     /**
-     * Finds zone information from a polygon file (KML/XML), uploads it to filestore, parses the polygon,
+     * Finds zone information from a geometry file (KML/XML), uploads it to filestore, parses the geometry,
      * queries WFS for district/zone, logs the operation, and returns a structured response.
+     * Supports polygon, line, and point geometries.
      *
-     * @param file the uploaded polygon file (KML/XML)
+     * @param file the uploaded geometry file (KML/XML)
      * @param gisRequestWrapper the GIS request wrapper containing RequestInfo and GIS request data
      * @return structured response containing district, zone, and WFS data
      * @throws Exception if any processing step fails
      */
     @Override
-    @Transactional
-    public GISResponse findZoneFromPolygon(MultipartFile file, GISRequestWrapper gisRequestWrapper) throws Exception {
+    public GISResponse findZoneFromGeometry(MultipartFile file, GISRequestWrapper gisRequestWrapper) throws Exception {
         GISRequest gisRequest = gisRequestWrapper.getGisRequest();
-        GisLog logEntry = null;
         String fileStoreId = null;
 
         try {
@@ -74,26 +72,19 @@ public class GisServiceImpl implements GisService {
             fileStoreId = filestoreClient.uploadFile(file, gisRequest.getTenantId(), "gis", "kml-upload");
             log.info("File uploaded successfully with ID: {}", fileStoreId);
 
-            // Create initial PENDING log entry
-            logEntry = createGisLog(gisRequest.getApplicationNo(), gisRequest.getRtpiId(), fileStoreId, 
-                    gisRequest.getTenantId(), STATUS_PENDING, "PENDING", "Processing started", null, 
-                    gisRequestWrapper.getRequestInfo() != null && gisRequestWrapper.getRequestInfo().getUserInfo() != null 
-                        ? gisRequestWrapper.getRequestInfo().getUserInfo().getUuid() : "system");
-            logRepository.save(logEntry);
+            // Parse KML to get geometry
+            log.info("Parsing KML file to extract geometry");
+            Geometry geometry = parseKmlFile(file);
+            log.info("Successfully parsed {} geometry with {} vertices", geometry.getGeometryType(), geometry.getCoordinates().length);
 
-            // Parse KML to get polygon
-            log.info("Parsing KML file to extract polygon geometry");
-            Polygon polygon = parseKmlFile(file);
-            log.info("Successfully parsed polygon with {} vertices", polygon.getCoordinates().length);
-
-            // Convert polygon to WKT format for WFS query
+            // Convert geometry to WKT format for WFS query
             WKTWriter wktWriter = new WKTWriter();
-            String polygonWkt = wktWriter.write(polygon);
-            log.info("Converted polygon to WKT: {}", polygonWkt);
+            String geometryWkt = wktWriter.write(geometry);
+            log.info("Converted geometry to WKT: {}", geometryWkt);
 
             // Query WFS for district/zone information
             log.info("Querying WFS for district/zone information");
-            WfsResponse wfsResponse = wfsClient.queryFeatures(polygonWkt);
+            WfsResponse wfsResponse = wfsClient.queryFeatures(geometryWkt);
             log.info("WFS query completed successfully");
 
             // Extract district and zone from WFS response
@@ -107,17 +98,15 @@ public class GisServiceImpl implements GisService {
             detailsJson.put("fileSize", file.getSize());
             detailsJson.put("district", district);
             detailsJson.put("zone", zone);
-            detailsJson.put("polygonVertices", polygon.getCoordinates().length);
+            detailsJson.put("geometryType", geometry.getGeometryType());
+            detailsJson.put("geometryVertices", geometry.getCoordinates().length);
 
-            // Update log entry with success status
-            logEntry.setStatus(STATUS_SUCCESS);
-            logEntry.setResponseStatus("SUCCESS");
-            logEntry.setResponseJson("Successfully processed polygon and found district/zone");
-            logEntry.setDetails(detailsJson);
-            logEntry.setLastmodifiedby(gisRequestWrapper.getRequestInfo() != null && gisRequestWrapper.getRequestInfo().getUserInfo() != null 
-                    ? gisRequestWrapper.getRequestInfo().getUserInfo().getUuid() : "system");
-            logEntry.setLastmodifiedtime(Instant.now().toEpochMilli());
-            logRepository.save(logEntry);
+            // Send success log to Kafka via persister
+            GisLog successLog = createGisLog(gisRequest.getApplicationNo(), gisRequest.getRtpiId(), fileStoreId,
+                    gisRequest.getTenantId(), STATUS_SUCCESS, "SUCCESS", "Successfully processed geometry and found district/zone", detailsJson,
+                    gisRequestWrapper.getRequestInfo() != null && gisRequestWrapper.getRequestInfo().getUserInfo() != null
+                        ? gisRequestWrapper.getRequestInfo().getUserInfo().getUuid() : "system");
+            logRepository.save(successLog);
 
             // Clean WFS response for return
             JsonNode cleanWfsResponse = cleanWfsResponse(wfsResponse);
@@ -144,24 +133,19 @@ public class GisServiceImpl implements GisService {
         } catch (Exception e) {
             log.error("Error finding zone from polygon file: {}", e.getMessage(), e);
 
-            // Update log entry with failure status
-            if (logEntry != null) {
-                ObjectNode errorDetails = objectMapper.createObjectNode();
-                errorDetails.put("fileName", file.getOriginalFilename());
-                errorDetails.put("error", e.getMessage());
-                if (fileStoreId != null) {
-                    errorDetails.put("fileStoreId", fileStoreId);
-                }
-                
-                logEntry.setStatus(STATUS_FAILURE);
-                logEntry.setResponseStatus("FAILURE");
-                logEntry.setResponseJson(e.getMessage());
-                logEntry.setDetails(errorDetails);
-                logEntry.setLastmodifiedby(gisRequestWrapper.getRequestInfo() != null && gisRequestWrapper.getRequestInfo().getUserInfo() != null 
-                        ? gisRequestWrapper.getRequestInfo().getUserInfo().getUuid() : "system");
-                logEntry.setLastmodifiedtime(Instant.now().toEpochMilli());
-                logRepository.save(logEntry);
+            // Send failure log to Kafka via persister
+            ObjectNode errorDetails = objectMapper.createObjectNode();
+            errorDetails.put("fileName", file.getOriginalFilename());
+            errorDetails.put("error", e.getMessage());
+            if (fileStoreId != null) {
+                errorDetails.put("fileStoreId", fileStoreId);
             }
+            
+            GisLog failureLog = createGisLog(gisRequest.getApplicationNo(), gisRequest.getRtpiId(), fileStoreId,
+                    gisRequest.getTenantId(), STATUS_FAILURE, "FAILURE", e.getMessage(), errorDetails,
+                    gisRequestWrapper.getRequestInfo() != null && gisRequestWrapper.getRequestInfo().getUserInfo() != null
+                        ? gisRequestWrapper.getRequestInfo().getUserInfo().getUuid() : "system");
+            logRepository.save(failureLog);
 
             throw new RuntimeException("Failed to process polygon file: " + e.getMessage(), e);
         }
@@ -186,11 +170,11 @@ public class GisServiceImpl implements GisService {
     }
 
     /**
-     * Parses KML file to extract polygon geometry
+     * Parses KML file to extract geometry (polygon, line, or point)
      */
-    private Polygon parseKmlFile(MultipartFile file) throws Exception {
+    private Geometry parseKmlFile(MultipartFile file) throws Exception {
         try (InputStream inputStream = file.getInputStream()) {
-            return KmlParser.parsePolygon(inputStream);
+            return KmlParser.parseGeometry(inputStream);
         } catch (Exception e) {
             log.error("Failed to parse KML file: {}", e.getMessage());
             throw new Exception("Invalid KML file format: " + e.getMessage(), e);
@@ -297,11 +281,23 @@ public class GisServiceImpl implements GisService {
     }
 
     /**
-     * Creates a GIS log entry
+     * Creates a GIS log entry with a unique ID for Kafka publishing.
+     * 
+     * @param applicationNo the application number
+     * @param rtpiId the RTPI ID
+     * @param fileStoreId the file store ID
+     * @param tenantId the tenant ID
+     * @param status the status
+     * @param responseStatus the response status
+     * @param responseJson the response JSON
+     * @param details the details as JsonNode
+     * @param createdBy the user who created the log
+     * @return GisLog object ready for Kafka publishing
      */
     private GisLog createGisLog(String applicationNo, String rtpiId, String fileStoreId, String tenantId, 
                                String status, String responseStatus, String responseJson, JsonNode details, String createdBy) {
         return GisLog.builder()
+                .id(UUID.randomUUID().toString()) // Generate unique ID for Kafka
                 .applicationNo(applicationNo)
                 .rtpiId(rtpiId)
                 .fileStoreId(fileStoreId)

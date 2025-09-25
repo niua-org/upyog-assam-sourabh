@@ -16,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
-
 /**
  * REST controller for GIS operations
  */
@@ -53,7 +51,7 @@ public class GisController {
                     file.getOriginalFilename(), gisRequestWrapper.getGisRequest().getTenantId(), 
                     gisRequestWrapper.getGisRequest().getApplicationNo(), gisRequestWrapper.getGisRequest().getRtpiId());
 
-            GISResponse response = gisService.findZoneFromPolygon(file, gisRequestWrapper);
+            GISResponse response = gisService.findZoneFromGeometry(file, gisRequestWrapper);
             return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {

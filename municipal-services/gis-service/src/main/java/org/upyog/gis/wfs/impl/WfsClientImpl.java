@@ -50,26 +50,29 @@ public class WfsClientImpl implements WfsClient {
     private final GisProperties gisProperties;
 
     /**
-     * Queries WFS service for features that intersect with the given polygon geometry.
+     * Queries WFS service for features that intersect with the given geometry.
      * 
-     * <p>This method performs spatial intersection queries using CQL filters. If the initial
-     * query returns empty results, it automatically retries with swapped coordinate axes
-     * to handle different coordinate system orientations (lat,lon vs lon,lat).</p>
+     * <p>This method performs spatial intersection queries using CQL filters. It automatically
+     * detects the geometry type (Polygon, LineString, Point) and uses the appropriate
+     * spatial predicate. If the initial query returns empty results, it automatically 
+     * retries with swapped coordinate axes to handle different coordinate system 
+     * orientations (lat,lon vs lon,lat).</p>
      * 
      * <p>Query process:</p>
      * <ol>
-     *   <li>Execute initial WFS query with provided WKT polygon</li>
+     *   <li>Detect geometry type from WKT</li>
+     *   <li>Execute initial WFS query with appropriate spatial predicate</li>
      *   <li>If empty results, swap coordinate axes and retry</li>
      *   <li>Return results or empty feature collection</li>
      * </ol>
      *
-     * @param polygonWkt the polygon geometry in Well-Known Text (WKT) format
-     * @return JsonNode containing WFS response with matching features
+     * @param geometryWkt the geometry in Well-Known Text (WKT) format (Polygon, LineString, or Point)
+     * @return WfsResponse containing WFS response with matching features
      * @throws Exception if WFS query fails or response cannot be parsed
      */
     @Override
-    public WfsResponse queryFeatures(String polygonWkt) throws Exception {
-        log.info("Starting WFS query for polygon intersection");
+    public WfsResponse queryFeatures(String geometryWkt) throws Exception {
+        log.info("Starting WFS query for geometry intersection");
         
         String geomAttr = Optional.ofNullable(gisProperties.getWfsGeometryColumn()).orElse("the_geom");
         String typeName = gisProperties.getWfsTypeName();
@@ -78,11 +81,11 @@ public class WfsClientImpl implements WfsClient {
         log.debug("WFS query parameters - URL: {}, typeName: {}, geomAttr: {}", baseUrl, typeName, geomAttr);
 
         // Execute initial WFS query
-        WfsResponse result = executeWfsQuery(baseUrl, typeName, geomAttr, polygonWkt);
+        WfsResponse result = executeWfsQuery(baseUrl, typeName, geomAttr, geometryWkt);
         
         // If empty results, try with swapped axes
         if (isEmptyFeatureCollection(result)) {
-            String swapped = swapWktAxes(polygonWkt);
+            String swapped = swapWktAxes(geometryWkt);
             log.info("WFS returned empty for original WKT; retrying with swapped axes");
             log.debug("Swapped WKT: {}", swapped);
             result = executeWfsQuery(baseUrl, typeName, geomAttr, swapped);
@@ -98,19 +101,20 @@ public class WfsClientImpl implements WfsClient {
      * Executes a WFS GetFeature request with spatial intersection query.
      * 
      * <p>Constructs and executes a WFS request using CQL filters for spatial intersection.
-     * The request uses EPSG:4326 coordinate reference system and returns GeoJSON format.</p>
+     * The method automatically detects the geometry type and uses the appropriate spatial
+     * predicate. The request uses EPSG:4326 coordinate reference system and returns GeoJSON format.</p>
      *
      * @param baseUrl the base WFS service URL
      * @param typeName the feature type name to query
      * @param geomAttr the geometry attribute name for spatial filtering
-     * @param polygonWkt the polygon geometry in WKT format for intersection
+     * @param geometryWkt the geometry in WKT format for intersection (Polygon, LineString, or Point)
      * @return WfsResponse containing the WFS response with typed features
      * @throws RuntimeException if WFS request fails or returns error status
      */
-    private WfsResponse executeWfsQuery(String baseUrl, String typeName, String geomAttr, String polygonWkt) {
+    private WfsResponse executeWfsQuery(String baseUrl, String typeName, String geomAttr, String geometryWkt) {
         try {
-            // Construct CQL filter for spatial intersection
-            String cql = String.format("INTERSECTS(%s, %s)", geomAttr, polygonWkt);
+            // Detect geometry type and construct appropriate CQL filter
+            String cql = constructCqlFilter(geomAttr, geometryWkt);
             
             // Build WFS GetFeature request URI
             URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl)
@@ -186,24 +190,97 @@ public class WfsClientImpl implements WfsClient {
     }
 
     /**
-     * Swaps coordinate axes in a WKT polygon string from (x,y) to (y,x) format.
+     * Constructs a CQL filter based on the geometry type and spatial predicate.
+     * 
+     * <p>This method detects the geometry type from the WKT string and constructs
+     * the appropriate CQL filter using the correct spatial predicate:</p>
+     * <ul>
+     *   <li>Polygon: INTERSECTS (finds features that intersect with the polygon)</li>
+     *   <li>LineString: INTERSECTS (finds features that intersect with the line)</li>
+     *   <li>Point: INTERSECTS (finds features that contain the point)</li>
+     * </ul>
+     *
+     * @param geomAttr the geometry attribute name
+     * @param geometryWkt the geometry in WKT format
+     * @return CQL filter string for the WFS query
+     */
+    private String constructCqlFilter(String geomAttr, String geometryWkt) {
+        String geometryType = detectGeometryType(geometryWkt);
+        String spatialPredicate = "INTERSECTS"; // Default for all geometry types
+        
+        log.debug("Detected geometry type: {}, using spatial predicate: {}", geometryType, spatialPredicate);
+        
+        String cql = String.format("%s(%s, %s)", spatialPredicate, geomAttr, geometryWkt);
+        log.debug("Constructed CQL filter: {}", cql);
+        
+        return cql;
+    }
+
+    /**
+     * Detects the geometry type from a WKT string.
+     * 
+     * @param wkt the WKT string
+     * @return the geometry type (POLYGON, LINESTRING, or POINT)
+     */
+    private String detectGeometryType(String wkt) {
+        if (wkt.toUpperCase().startsWith("POLYGON")) {
+            return "POLYGON";
+        } else if (wkt.toUpperCase().startsWith("LINESTRING")) {
+            return "LINESTRING";
+        } else if (wkt.toUpperCase().startsWith("POINT")) {
+            return "POINT";
+        } else {
+            log.warn("Unknown geometry type in WKT: {}, defaulting to POLYGON", wkt);
+            return "POLYGON";
+        }
+    }
+
+    /**
+     * Swaps coordinate axes in a WKT geometry string from (x,y) to (y,x) format.
      * 
      * <p>This method is used to handle coordinate system orientation differences
      * between different WFS services. Some services expect coordinates in
      * latitude,longitude order while others expect longitude,latitude.</p>
      * 
-     * <p>Example transformation:</p>
-     * <pre>
-     * Input:  "POLYGON((-75.2 39.6, -74.6 39.6, -74.6 40.1, -75.2 40.1, -75.2 39.6))"
-     * Output: "POLYGON((39.6 -75.2, 39.6 -74.6, 40.1 -74.6, 40.1 -75.2, 39.6 -75.2))"
-     * </pre>
+     * <p>Supports multiple geometry types:</p>
+     * <ul>
+     *   <li>Polygon: Swaps coordinates in the polygon ring</li>
+     *   <li>LineString: Swaps coordinates in the line vertices</li>
+     *   <li>Point: Swaps the single coordinate pair</li>
+     * </ul>
      *
-     * @param wkt the original WKT polygon string
-     * @return WKT polygon string with swapped coordinate axes
+     * @param wkt the original WKT geometry string
+     * @return WKT geometry string with swapped coordinate axes
      */
     private String swapWktAxes(String wkt) {
         log.debug("Swapping coordinate axes for WKT: {}", wkt);
         
+        String geometryType = detectGeometryType(wkt);
+        String result;
+        
+        switch (geometryType) {
+            case "POLYGON":
+                result = swapPolygonAxes(wkt);
+                break;
+            case "LINESTRING":
+                result = swapLineStringAxes(wkt);
+                break;
+            case "POINT":
+                result = swapPointAxes(wkt);
+                break;
+            default:
+                log.warn("Unknown geometry type for axis swapping: {}, returning original", geometryType);
+                result = wkt;
+        }
+        
+        log.debug("Axis swap completed: {}", result);
+        return result;
+    }
+
+    /**
+     * Swaps coordinate axes for a Polygon WKT string.
+     */
+    private String swapPolygonAxes(String wkt) {
         // Extract coordinate pairs from WKT polygon
         String inner = wkt.replaceAll("^.*\\(\\(", "").replaceAll("\\)\\).*$", "");
         String[] pts = inner.split(",");
@@ -224,10 +301,44 @@ public class WfsClientImpl implements WfsClient {
             log.debug("Closed polygon ring by adding first coordinate");
         }
         
-        String result = "POLYGON((" + String.join(",", swapped) + "))";
-        log.debug("Axis swap completed: {}", result);
+        return "POLYGON((" + String.join(",", swapped) + "))";
+    }
+
+    /**
+     * Swaps coordinate axes for a LineString WKT string.
+     */
+    private String swapLineStringAxes(String wkt) {
+        // Extract coordinate pairs from WKT linestring
+        String inner = wkt.replaceAll("^.*\\(", "").replaceAll("\\).*$", "");
+        String[] pts = inner.split(",");
+        List<String> swapped = new ArrayList<>();
         
-        return result;
+        // Swap x,y to y,x for each coordinate pair
+        for (String p : pts) {
+            String[] xy = p.trim().split("\\s+");
+            if (xy.length >= 2) {
+                swapped.add(xy[1] + " " + xy[0]);
+                log.trace("Swapped {} {} to {} {}", xy[0], xy[1], xy[1], xy[0]);
+            }
+        }
+        
+        return "LINESTRING(" + String.join(",", swapped) + ")";
+    }
+
+    /**
+     * Swaps coordinate axes for a Point WKT string.
+     */
+    private String swapPointAxes(String wkt) {
+        // Extract coordinate from WKT point
+        String inner = wkt.replaceAll("^.*\\(", "").replaceAll("\\).*$", "");
+        String[] xy = inner.trim().split("\\s+");
+        
+        if (xy.length >= 2) {
+            log.trace("Swapped {} {} to {} {}", xy[0], xy[1], xy[1], xy[0]);
+            return "POINT(" + xy[1] + " " + xy[0] + ")";
+        }
+        
+        return wkt; // Return original if parsing fails
     }
 
 }
