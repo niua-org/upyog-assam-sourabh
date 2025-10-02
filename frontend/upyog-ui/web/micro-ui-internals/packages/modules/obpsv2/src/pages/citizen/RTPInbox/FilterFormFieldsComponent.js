@@ -64,7 +64,7 @@ const FilterFormFieldsComponent = ({
           onAssignmentChange={(e) => setFilterFormValue("applicationStatus", e)}
           disable={isInboxLoading}
           optionCardStyles={{ maxHeight: "200px", zIndex: 9999 }}
-          placeholder={t("ES_INBOX_APPLICATION_STATUS")}
+          placeholder={t("SELECT_STATUS")}
           t={t}
         />
       </FilterFormField>
@@ -77,7 +77,7 @@ const FilterFormFieldsComponent = ({
           onAssignmentChange={(e) => setFilterFormValue("district", e)}
           disable={isLoading}
           optionCardStyles={{ maxHeight: "200px", zIndex: 9999 }}
-          placeholder={t("DISTRICT")}
+          placeholder={t("SELECT_DISTRICT")}
           t={t}
         />
       </FilterFormField>

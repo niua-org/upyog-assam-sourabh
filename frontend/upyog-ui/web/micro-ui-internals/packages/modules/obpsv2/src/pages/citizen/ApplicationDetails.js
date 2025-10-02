@@ -236,10 +236,14 @@ import {
         break;
       case "APPLY_FOR_SCRUTINY":
         let scrutinyurl=window.location.href;
-        let scrutinyRedirectingUrl= scrutinyurl.split("/application/")[0] + "/rtp/apply/home";
+        let scrutinyRedirectingUrl= scrutinyurl.split("/application/")[0] +  `/rtp/apply/home?applicationNo=${bpaId}`;
         redirectToPage(scrutinyRedirectingUrl);
         break;
       case "APPROVE":
+        setPopup(true);
+        setDisplayMenu(false);
+        break;
+      case "ACCEPT":
         setPopup(true);
         setDisplayMenu(false);
         break;
@@ -530,7 +534,7 @@ import {
               {(additionalDetails?.todBenefits === "YES" || additionalDetails?.todBenefits?.code === "YES") && additionalDetails?.todZone && (
                 <Row
                   label={t("BPA_TOD_ZONE")}
-                  text={t(additionalDetails?.todZone) || t("CS_NA")}
+                  text={t(additionalDetails?.todZone?.code) || t("CS_NA")}
                 />
               )}
             </StatusTable>
@@ -584,18 +588,16 @@ import {
       actionCancelLabel={t("CS_COMMON_CANCEL")}
       actionCancelOnSubmit={() => setPopup(false)}
       actionSaveLabel={
-        t("CS_COMMON_CONFIRM")
+        t("CS_COMMON_SUBMIT")
       }
       actionSaveOnSubmit={() => {
-        if(selectedAction==="APPROVE"||selectedAction==="REJECT"||selectedAction==="SEND"||selectedAction==="VALIDATE_GIS" ||selectedAction==="SEND_BACK_TO_RTP" )
-        //setActionError(t("CS_MANDATORY_REASON"));
+        if(selectedAction==="APPROVE"||selectedAction==="ACCEPT"||selectedAction==="REJECT"||selectedAction==="SEND"||selectedAction==="VALIDATE_GIS" ||selectedAction==="SEND_BACK_TO_RTP" )
           onAssign(selectedAction, comments, "Edit");
       if(selectedAction==="NEWRTP" &&!oldRTPName)
         setActionError(t("CS_OLD_RTP_NAME_MANDATORY"))
       if(selectedAction==="NEWRTP" && !newRTPName)
         setActionError(t("CS_NEW_RTP_NAME_MANDATORY"))
-        if(selectedAction === "REJECT" && !comments)
-        setActionError(t("CS_MANDATORY_COMMENTS"));
+
         
        
       }}
@@ -604,7 +606,7 @@ import {
     >
       <Card>
   <React.Fragment>
-    {(selectedAction === "APPROVE" || selectedAction === "SEND" || selectedAction === "REJECT"|| selectedAction==="SEND_BACK_TO_RTP") && (
+    {(selectedAction === "APPROVE" || selectedAction === "ACCEPT" || selectedAction === "SEND" || selectedAction === "REJECT"|| selectedAction==="SEND_BACK_TO_RTP") && (
       <div>
         <CardLabel>{t("COMMENTS")}</CardLabel>
         <TextArea 
@@ -692,7 +694,7 @@ import {
                 }}
               />
             )}
-            {toast && <Toast label={t(assignResponse ? `CS_ACTION_${selectedAction}_TEXT` : "CS_ACTION_ASSIGN_FAILED")} onClose={closeToast} />}
+            {toast && <Toast label={t(assignResponse ? `CS_ACTION_UPDATE_${selectedAction}_TEXT` : "CS_ACTION_ASSIGN_FAILED")} onClose={closeToast} />}
              <ActionBar>
               {displayMenu && workflowDetails?.ProcessInstances?.[0]?.nextActions ? (
                   <Menu options={workflowDetails?.ProcessInstances?.[0]?.nextActions.map((action) => action.action)} t={t} onSelect={onActionSelect} />

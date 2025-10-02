@@ -11,14 +11,20 @@ const AreaMapping = ({ t, config, onSelect, formData, searchResult }) => {
   const [revenueVillages, setRevenueVillages] = useState([]);
   const [mouzas, setMouzas] = useState([]);
   
-  // State for all dropdown values
-  const [district, setDistrict] = useState(formData?.areaMapping?.district || "");
-  const [planningArea, setPlanningArea] = useState(formData?.areaMapping?.planningArea || "");
-  const [ppAuthority, setPpAuthority] = useState(formData?.areaMapping?.ppAuthority || "");
-  const [bpAuthority, setBpAuthority] = useState(formData?.areaMapping?.bpAuthority || "");
-  const [revenueVillage, setRevenueVillage] = useState(formData?.areaMapping?.revenueVillage || "");
-  const [mouza, setMouza] = useState(formData?.areaMapping?.mouza || "");
-  const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.areaMapping?.ward || "");
+ // State for all dropdown values
+const [district, setDistrict] = useState(formData?.areaMapping?.district || (searchResult?.areaMapping?.district ? { code: searchResult.areaMapping.district, name: searchResult.areaMapping.district, i18nKey: searchResult.areaMapping.district } : ""));
+
+const [planningArea, setPlanningArea] = useState(formData?.areaMapping?.planningArea || (searchResult?.areaMapping?.planningArea ? { code: searchResult.areaMapping.planningArea, name: searchResult.areaMapping.planningArea, i18nKey: searchResult.areaMapping.planningArea } : ""));
+
+const [ppAuthority, setPpAuthority] = useState(formData?.areaMapping?.ppAuthority || (searchResult?.areaMapping?.planningPermitAuthority ? { code: searchResult.areaMapping.planningPermitAuthority, name: searchResult.areaMapping.planningPermitAuthority, i18nKey: searchResult.areaMapping.planningPermitAuthority } : ""));
+
+const [bpAuthority, setBpAuthority] = useState(formData?.areaMapping?.bpAuthority || (searchResult?.areaMapping?.buildingPermitAuthority ? { code: searchResult.areaMapping.buildingPermitAuthority, name: searchResult.areaMapping.buildingPermitAuthority, i18nKey: searchResult.areaMapping.buildingPermitAuthority } : ""));
+
+const [revenueVillage, setRevenueVillage] = useState(formData?.areaMapping?.revenueVillage || (searchResult?.areaMapping?.revenueVillage ? { code: searchResult.areaMapping.revenueVillage, name: searchResult.areaMapping.revenueVillage, i18nKey: searchResult.areaMapping.revenueVillage } : ""));
+
+const [mouza, setMouza] = useState(formData?.areaMapping?.mouza || (searchResult?.areaMapping?.mouza ? { code: searchResult.areaMapping.mouza, name: searchResult.areaMapping.mouza, i18nKey: searchResult.areaMapping.mouza } : ""));
+
+const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.areaMapping?.ward || "");
 
   // Fetch data from MDMS
   const { data: areaMappingData, isLoading } = Digit.Hooks.useEnabledMDMS(

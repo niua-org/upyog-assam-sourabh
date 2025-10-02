@@ -81,7 +81,14 @@ const LandDetails = ({ t, config, onSelect, formData, searchResult }) => {
   const landData = formData?.land || {};
 
   // Construction Type
-  const [constructionType, setConstructionType] = useState(landData?.constructionType || constructionTypeOptions.find(opt => opt.code === searchResult?.landInfo?.constructionType)|| "");
+  const [constructionType, setConstructionType] = useState(
+    landData?.constructionType || 
+    (searchResult?.additionalDetails?.constructionType ? {
+      "code": searchResult?.additionalDetails?.constructionType,
+      "i18nKey": searchResult?.additionalDetails?.constructionType
+    } : "") || 
+    ""
+  );  
 
   // Land Record Numbers
   const [oldDagNumber, setOldDagNumber] = useState(landData?.oldDagNumber || searchResult?.landInfo?.oldDagNumber ||"");
@@ -97,21 +104,21 @@ const LandDetails = ({ t, config, onSelect, formData, searchResult }) => {
   const [westOwner, setWestOwner] = useState(landData?.adjoiningOwners?.west || searchResult?.additionalDetails?.adjoiningOwners?.west || "");
 
   // Future Provisions
-  const [verticalExtension, setVerticalExtension] = useState(landData?.futureProvisions?.verticalExtension|| searchResult?.landInfo?.verticalExtension || "NO");
-  const [verticalExtensionArea, setVerticalExtensionArea] = useState(landData?.futureProvisions?.verticalExtensionArea || searchResult?.landInfo?.verticalExtensionArea|| "");
-  const [horizontalExtension, setHorizontalExtension] = useState(landData?.futureProvisions?.horizontalExtension || searchResult?.landInfo?.horizontalExtension || "NO");
-  const [horizontalExtensionArea, setHorizontalExtensionArea] = useState(landData?.futureProvisions?.horizontalExtensionArea || searchResult?.landInfo?.horizontalExtensionArea|| "");
+  
+  const [verticalExtension, setVerticalExtension] = useState(landData?.futureProvisions?.verticalExtension || searchResult?.additionalDetails?.futureProvisions?.verticalExtension || "NO");
+  const [verticalExtensionArea, setVerticalExtensionArea] = useState(landData?.futureProvisions?.verticalExtensionArea || searchResult?.additionalDetails?.futureProvisions?.verticalExtensionArea || "");
+  const [horizontalExtension, setHorizontalExtension] = useState(landData?.futureProvisions?.horizontalExtension || searchResult?.additionalDetails?.futureProvisions?.horizontalExtension || "NO");
+  const [horizontalExtensionArea, setHorizontalExtensionArea] = useState(landData?.futureProvisions?.horizontalExtensionArea || searchResult?.additionalDetails?.futureProvisions?.horizontalExtensionArea || "");
 
   // RTP and Occupancy
-  const searchResultRTPCategory = rtpCategoryOptions.find(opt => opt.i18nKey === searchResult?.rtpDetails?.rtpCategory)
-  const [rtpCategory, setRtpCategory] = useState(landData?.rtpCategory || searchResultRTPCategory||"");
+  const [rtpCategory, setRtpCategory] = useState(landData?.rtpCategory || (searchResult?.rtpDetails?.rtpCategory ? {"code": searchResult?.rtpDetails?.rtpCategory, "i18nKey": searchResult?.rtpDetails?.rtpCategory} : "") || "");
   const [registeredTechnicalPerson, setRegisteredTechnicalPerson] = useState(landData?.registeredTechnicalPerson || rtpOptions.find(opt => opt.name === searchResult?.rtpDetails?.rtpName) ||"");
-  const [occupancyType, setOccupancyType] = useState(landData?.occupancyType || occupancyTypeOptions.find(opt => opt.code === searchResult?.landInfo?.units?.[0]?.occupancyType) || "");
+  const [occupancyType, setOccupancyType] = useState(landData?.occupancyType || (searchResult?.landInfo?.units?.[0]?.occupancyType ? {"code": searchResult?.landInfo?.units[0].occupancyType, "i18nKey": searchResult?.landInfo?.units[0].occupancyType} : "") || "");
 
   // TOD Benefits
   const [todBenefits, setTodBenefits] = useState(landData?.todBenefits || futureProvisionOptions.find(opt => opt.code === searchResult?.additionalDetails?.todBenefits)  ||"NO");
-  const [todWithTdr, setTodWithTdr] = useState(landData?.todWithTdr ||  false);
-  const [todZone, setTodZone] = useState(landData?.todZone || "");
+  const [todWithTdr, setTodWithTdr] = useState(landData?.todWithTdr || searchResult?.additionalDetails?.todWithTdr  ||  false);
+  const [todZone, setTodZone] = useState(landData?.todZone || searchResult?.additionalDetails?.todZone || "");
   const [tdrUsed, setTdrUsed] = useState(landData?.tdrUsed || futureProvisionOptions.find(opt => opt.code === searchResult?.additionalDetails?.tdrUsed)||"NO");
   const [todAcknowledgement, setTodAcknowledgement] = useState(landData?.todAcknowledgement || searchResult?.additionalDetails?.todAcknowledgement||false);
 

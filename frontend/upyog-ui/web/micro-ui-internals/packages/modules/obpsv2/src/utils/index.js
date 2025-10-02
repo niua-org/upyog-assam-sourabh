@@ -47,7 +47,7 @@ export const checkForNotNull = (value = "") => {
 };
 
 export const checkForNA = (value = "") => {
-  return checkForNotNull(value) ? value : "CS_NA";
+  return checkForNotNull(value) ? value : "NA";
 };
 
 export const showHidingLinksForStakeholder = (roles = []) => {
@@ -125,8 +125,8 @@ export const bpaPayload = async(data) => {
         adjoiningOwners: data?.land?.adjoiningOwners,
         futureProvisions: data?.land?.futureProvisions,
         todBenefits: data?.land?.todBenefits?.code,
-        todWithTdr: data?.land?.todWithTdr?.code,
-        todZone: data?.land?.todZone?.code,
+        todWithTdr: data?.land?.todWithTdr,
+        todZone: data?.land?.todZone,
         tdrUsed: data?.land?.tdrUsed?.code,
         todAcknowledgement: data?.land?.todAcknowledgement,
       },
@@ -172,6 +172,7 @@ export const bpaPayload = async(data) => {
           addressLine1: data?.address?.permanent?.addressLine1,
           addressLine2: data?.address?.permanent?.addressLine2,
           city: data?.address?.permanent?.city?.code,
+          locality:{code: data?.address?.permanent?.city?.code},
           country: "INDIA",
           district: data?.address?.permanent?.district?.code,
           houseNo: data?.address?.permanent?.houseNo,

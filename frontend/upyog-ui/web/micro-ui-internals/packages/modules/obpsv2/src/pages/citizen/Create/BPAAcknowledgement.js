@@ -1,4 +1,4 @@
-import { Banner, Card, LinkButton, Loader, Row, StatusTable, SubmitBar, Toast } from "@upyog/digit-ui-react-components";
+import { Banner, Card, LinkButton, Loader, Row, StatusTable, SubmitBar, Toast,CardText } from "@upyog/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -15,11 +15,6 @@ const GetActionMessage = (props) => {
     return t("BPA_APPLICATION_PENDING");
   }
   return t("BPA_APPLICATION_FAILED");
-};
-
-const rowContainerStyle = {
-  padding: "4px 0px",
-  justifyContent: "space-between",
 };
 
 const BannerPicker = (props) => {
@@ -91,16 +86,14 @@ const BPAAcknowledgement = ({ data, onSuccess }) => {
       <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isLoading} />
       <StatusTable>
          {mutation.isSuccess && (
-            <Row
-            label={t(mutation.data?.bpa?.[0]?.status)}
-            rowContainerStyle={rowContainerStyle}
-            last       
-            textStyle={{ 
+            <CardText style={{ 
               whiteSpace: "pre", 
               width: "60%", 
-              fontWeight: "bold" 
-            }}
-            />
+              fontWeight: "bold" ,
+              color: "#00703C"
+            }}>
+            {t(mutation.data?.bpa?.[0]?.status)}
+            </CardText>
         )}
       </StatusTable>
       {/* {mutation.isSuccess && <SubmitBar label={t("BPA_DOWNLOAD_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />} */}

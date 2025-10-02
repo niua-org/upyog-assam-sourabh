@@ -183,27 +183,27 @@ const CheckPage = ({ onSubmit, value = {} }) => {
         <StatusTable>
           <Row
             label={t("DISTRICT")}
-            text={checkForNA(areaMapping?.district?.name)}
+            text={checkForNA(t(areaMapping?.district?.code))}
           />
           <Row
             label={t("PLANNING_AREA")}
-            text={checkForNA(areaMapping?.planningArea?.name)}
+            text={checkForNA(t(areaMapping?.planningArea?.code))}
           />
           <Row
             label={t("PP_AUTHORITY")}
-            text={checkForNA(areaMapping?.ppAuthority?.name)}
+            text={checkForNA(t(areaMapping?.ppAuthority?.code))}
           />
           <Row
             label={t("BP_AUTHORITY")}
-            text={checkForNA(areaMapping?.bpAuthority?.name)}
+            text={checkForNA(t(areaMapping?.bpAuthority?.code))}
           />
           <Row
             label={t("REVENUE_VILLAGE")}
-            text={checkForNA(areaMapping?.revenueVillage?.name)}
+            text={checkForNA(t(areaMapping?.revenueVillage?.code))}
           />
           <Row
             label={t("MOUZA")}
-            text={checkForNA(areaMapping?.mouza?.name || areaMapping?.mouza)}
+            text={checkForNA(t(areaMapping?.mouza?.code) || t(areaMapping?.mouza))}
           />
           <Row
             label={t("WARD")}
@@ -305,15 +305,15 @@ const CheckPage = ({ onSubmit, value = {} }) => {
           />
           <Row
             label={t("BPA_DISTRICT")}
-            text={checkForNA(address?.permanent?.district?.name)}
+            text={checkForNA(t(address?.permanent?.district?.code))}
           />
           <Row
             label={t("BPA_CITY_VILLAGE")}
-            text={checkForNA(address?.permanent?.city?.name)}
+            text={checkForNA(t(address?.permanent?.city?.code))}
           />
           <Row
             label={t("BPA_STATE")}
-            text={checkForNA(address?.permanent?.state?.name)}
+            text={checkForNA(t(address?.permanent?.state?.code))}
           />
           <Row
             label={t("BPA_PIN_CODE")}
@@ -358,15 +358,15 @@ const CheckPage = ({ onSubmit, value = {} }) => {
             />
             <Row
               label={t("BPA_DISTRICT")}
-              text={checkForNA(address?.correspondence?.district?.name)}
+              text={checkForNA(t(address?.correspondence?.district?.code))}
             />
             <Row
               label={t("BPA_CITY_VILLAGE")}
-              text={checkForNA(address?.correspondence?.city?.name)}
+              text={checkForNA(t(address?.correspondence?.city?.code))}
             />
             <Row
               label={t("BPA_STATE")}
-              text={checkForNA(address?.correspondence?.state?.name)}
+              text={checkForNA(t(address?.correspondence?.state?.code))}
             />
             <Row
               label={t("BPA_PIN_CODE")}
@@ -394,7 +394,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
         <StatusTable>
           <Row
             label={t("BPA_CONSTRUCTION_TYPE")}
-            text={checkForNA(land?.constructionType?.name)}
+            text={checkForNA(t(land?.constructionType?.code))}
           />
           <Row
             label={t("BPA_OLD_DAG_NUMBER")}
@@ -466,7 +466,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
         <StatusTable>
           <Row
             label={t("BPA_VERTICAL_EXTENSION")}
-            text={checkForNA(land?.futureProvisions?.verticalExtension?.name)}
+            text={checkForNA(t(land?.futureProvisions?.verticalExtension?.code))}
           />
           {land?.futureProvisions?.verticalExtension?.code === "YES" && (
             <Row
@@ -476,7 +476,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
           )}
           <Row
             label={t("BPA_HORIZONTAL_EXTENSION")}
-            text={checkForNA(land?.futureProvisions?.horizontalExtension?.name)}
+            text={checkForNA(t(land?.futureProvisions?.horizontalExtension?.code))}
           />
           {land?.futureProvisions?.horizontalExtension?.code === "YES" && (
             <Row
@@ -489,29 +489,29 @@ const CheckPage = ({ onSubmit, value = {} }) => {
         <StatusTable style={{ marginTop: "16px" }}>
           <Row
             label={t("BPA_RTP_CATEGORY")}
-            text={checkForNA(land?.rtpCategory?.name)}
+            text={checkForNA(t(land?.rtpCategory?.code))}
           />
           <Row
             label={t("BPA_REGISTERED_TECHNICAL_PERSON")}
-            text={checkForNA(land?.registeredTechnicalPerson?.name)}
+            text={checkForNA(t(land?.registeredTechnicalPerson?.code))}
           />
           <Row
             label={t("BPA_OCCUPANCY_TYPE")}
-            text={checkForNA(land?.occupancyType?.name)}
+            text={checkForNA(t(land?.occupancyType?.code))}
           />
           <Row
             label={t("BPA_TOD_BENEFITS")}
-            text={checkForNA(land?.todBenefits?.name)}
+            text={checkForNA(t(land?.todBenefits?.code))}
           />
           {land?.todBenefits?.code === "YES" && (
             <>
               <Row
                 label={t("BPA_TOD_WITH_TDR")}
-                text={checkForNA(land?.todWithTdr?.name)}
+                text={checkForNA(t(land?.todWithTdr?.code))}
               />
               <Row
                 label={t("BPA_TOD_ZONE")}
-                text={checkForNA(land?.todZone?.name)}
+                text={checkForNA(t(land?.todZone?.code))}
               />
             </>
           )}
@@ -557,22 +557,23 @@ const CheckPage = ({ onSubmit, value = {} }) => {
                 onClick={() => routeTo(`${routeLink}/document-details`)}
               />
               {
-                <DocumentsPreview
-                  documents={getOrderDocuments(applicationDocs)}
-                  svgStyles={{}}
-                  isSendBackFlow={false}
-                  isHrLine={true}
-                  titleStyles={{
-                    fontSize: "18px",
-                    lineHeight: "24px",
-                    fontWeight: 700,
-                    marginBottom: "10px",
-                  }}
-                />
+              <DocumentsPreview
+              documents={getOrderDocuments(applicationDocs)}
+              svgStyles={{}}
+              isSendBackFlow={false}
+              isHrLine={true}
+              hideTitle={true}
+              titleStyles={{
+                fontSize: "18px",
+                lineHeight: "24px",
+                fontWeight: 700,
+                marginBottom: "10px",
+              }}
+            />
               }
             </StatusTable>
             
-              <div
+              {/* <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -666,7 +667,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
                   </div>
                 </React.Fragment>
               )}
-            </StatusTable>
+            </StatusTable> */}
           </React.Fragment>
         ) : null}
 
