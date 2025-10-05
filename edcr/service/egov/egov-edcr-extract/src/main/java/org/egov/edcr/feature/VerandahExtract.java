@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.Floor;
+import org.egov.common.entity.edcr.FloorUnit;
 import org.egov.common.entity.edcr.Measurement;
 import org.egov.edcr.constants.DxfFileConstants;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
@@ -27,46 +28,90 @@ public class VerandahExtract extends FeatureExtract {
 
 	@Override
 	public PlanDetail extract(PlanDetail pl) {
-		for (Block b : pl.getBlocks()) {
-			if (b.getBuilding() != null && b.getBuilding().getFloors() != null
-					&& !b.getBuilding().getFloors().isEmpty()) {
-				for (Floor f : b.getBuilding().getFloors()) {
-
-					List<DXFLWPolyline> verandahs = Util.getPolyLinesByLayer(pl.getDoc(),
-							String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"),b.getNumber(), f.getNumber()));
-					if (!verandahs.isEmpty()) {
-						List<Measurement> verandahMeasurements = verandahs.stream()
-								.map(polyline -> new MeasurementDetail(polyline, true)).collect(Collectors.toList());
-						f.getVerandah().setMeasurements(verandahMeasurements);
-
-//						f.getVerandah()
-//								.setHeightOrDepth((Util.getListOfDimensionValueByLayer(pl,
-//										String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"),
-//												b.getNumber(), f.getNumber()))));
-						
-						 String verandahLayer = String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"),
-		                            b.getNumber(), f.getNumber());
-						 // Verandah Height from dimension
-                        List<BigDecimal> verandahHeight =
-                                Util.getListOfDimensionByColourCode(pl, verandahLayer,
-                                        DxfFileConstants.INDEX_COLOR_ONE);
-
-                        // Verandah Width from dimension
-                        List<BigDecimal> verandahWidth =
-                                Util.getListOfDimensionByColourCode(pl, verandahLayer,
-                                        DxfFileConstants.INDEX_COLOR_TWO);
-
-                        f.getVerandah().setHeightOrDepth(verandahHeight);
-                        f.getVerandah().setVerandahWidth(verandahWidth);
-
-					}
-
-				}
-			}
-		}
-
-		return pl;
+	    for (Block b : pl.getBlocks()) {
+	        if (b.getBuilding() != null && b.getBuilding().getFloors() != null
+	                && !b.getBuilding().getFloors().isEmpty()) {
+	            for (Floor f : b.getBuilding().getFloors()) {
+	            	for (FloorUnit unit : f.getUnits()) {
+	                extractVerandah(pl, b, f, unit);
+	            }
+	        }
+	    }
+	  }      
+	    return pl;
 	}
+	
+	
+	/**
+	 * Extracts verandah measurements, height, and width for a specific floor.
+	 *
+	 * @param pl the plan detail object
+	 * @param b  the block being processed
+	 * @param f  the floor being processed
+	 */
+	private void extractVerandah(PlanDetail pl, Block b, Floor f, FloorUnit unit) {
+	    String verandahLayer = String.format(
+	            layerNames.getLayerName("LAYER_NAME_UNIT_VERANDAH"),
+	            b.getNumber(), f.getNumber(), unit.getUnitNumber());
+
+	    List<DXFLWPolyline> verandahs = Util.getPolyLinesByLayer(pl.getDoc(), verandahLayer);
+
+	    if (!verandahs.isEmpty()) {
+	        // Extract measurements
+	        List<Measurement> verandahMeasurements = verandahs.stream()
+	                .map(polyline -> new MeasurementDetail(polyline, true))
+	                .collect(Collectors.toList());
+	        unit.getVerandah().setMeasurements(verandahMeasurements);
+
+	        // Verandah Height from dimension
+	        List<BigDecimal> verandahHeight = Util.getListOfDimensionByColourCode(
+	                pl, verandahLayer, DxfFileConstants.INDEX_COLOR_ONE);
+
+	        // Verandah Width from dimension
+	        List<BigDecimal> verandahWidth = Util.getListOfDimensionByColourCode(
+	                pl, verandahLayer, DxfFileConstants.INDEX_COLOR_TWO);
+
+	        unit.getVerandah().setHeightOrDepth(verandahHeight);
+	        unit.getVerandah().setVerandahWidth(verandahWidth);
+	    }
+	}
+	/*
+	 * public PlanDetail extract(PlanDetail pl) { for (Block b : pl.getBlocks()) {
+	 * if (b.getBuilding() != null && b.getBuilding().getFloors() != null &&
+	 * !b.getBuilding().getFloors().isEmpty()) { for (Floor f :
+	 * b.getBuilding().getFloors()) {
+	 * 
+	 * List<DXFLWPolyline> verandahs = Util.getPolyLinesByLayer(pl.getDoc(),
+	 * String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"),b.getNumber(),
+	 * f.getNumber())); if (!verandahs.isEmpty()) { List<Measurement>
+	 * verandahMeasurements = verandahs.stream() .map(polyline -> new
+	 * MeasurementDetail(polyline, true)).collect(Collectors.toList());
+	 * f.getVerandah().setMeasurements(verandahMeasurements);
+	 * 
+	 * // f.getVerandah() //
+	 * .setHeightOrDepth((Util.getListOfDimensionValueByLayer(pl, //
+	 * String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"), //
+	 * b.getNumber(), f.getNumber()))));
+	 * 
+	 * String verandahLayer =
+	 * String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"), b.getNumber(),
+	 * f.getNumber()); // Verandah Height from dimension List<BigDecimal>
+	 * verandahHeight = Util.getListOfDimensionByColourCode(pl, verandahLayer,
+	 * DxfFileConstants.INDEX_COLOR_ONE);
+	 * 
+	 * // Verandah Width from dimension List<BigDecimal> verandahWidth =
+	 * Util.getListOfDimensionByColourCode(pl, verandahLayer,
+	 * DxfFileConstants.INDEX_COLOR_TWO);
+	 * 
+	 * f.getVerandah().setHeightOrDepth(verandahHeight);
+	 * f.getVerandah().setVerandahWidth(verandahWidth);
+	 * 
+	 * }
+	 * 
+	 * } } }
+	 * 
+	 * return pl; }
+	 */
 
 	@Override
 	public PlanDetail validate(PlanDetail pl) {

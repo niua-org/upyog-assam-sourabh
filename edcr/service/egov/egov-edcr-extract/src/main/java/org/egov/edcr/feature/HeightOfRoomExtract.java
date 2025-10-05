@@ -92,7 +92,7 @@ public class HeightOfRoomExtract extends FeatureExtract {
 
 					
 						
-						// Code Added by Neha for windows extract
+						/*// Code Added by Neha for windows extract
 
 						String windowLayerName = String.format(layerNames.getLayerName("LAYER_NAME_WINDOW"),
 								block.getNumber(), floor.getNumber(), "+\\d");
@@ -139,8 +139,9 @@ public class HeightOfRoomExtract extends FeatureExtract {
 
 							}
 						}
-					//}
+					//}*/
                     }
+                    
         if (LOG.isDebugEnabled())
             LOG.debug("End of Height Of Room Extract......");
         return pl;
@@ -775,7 +776,7 @@ public class HeightOfRoomExtract extends FeatureExtract {
 	    for (Room room : unit.getRegularRooms()) {
 
 	        String windowLayerName = String.format(
-	                layerNames.getLayerName("LAYER_NAME_UNIT_REGULAR_ROOM_WINDOW"),
+	                layerNames.getLayerName("LAYER_NAME_UNIT_ROOM_WINDOW"),
 	                block.getNumber(),
 	                floor.getNumber(),
 	                unit.getUnitNumber(),

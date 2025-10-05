@@ -67,6 +67,8 @@ public class FloorUnit extends Measurement {
     private List<Door> nonaHabitationalDoors = new ArrayList<>();
     private List<Door> doors = new ArrayList<>();
     private List<Window> windows = new ArrayList<>();
+    private List<Toilet> toilet;
+    private MeasurementWithHeight verandah = new MeasurementWithHeight();
     
     public List<Window> getWindows() {
 		return windows;
@@ -80,9 +82,25 @@ public class FloorUnit extends Measurement {
 		return doors;
 	}
 
+	public MeasurementWithHeight getVerandah() {
+		return verandah;
+	}
+
+	public void setVerandah(MeasurementWithHeight verandah) {
+		this.verandah = verandah;
+	}
+
 	public void setDoors(List<Door> doors) {
 		this.doors = doors;
 	}
+	
+	public List<Toilet> getToilet() {
+	        return toilet;
+    }
+
+    public void setToilet(List<Toilet> toilet) {
+	        this.toilet = toilet;
+    }
 
 	public List<Room> getNonInhabitationalRooms() {
 		return nonInhabitationalRooms;
