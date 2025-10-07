@@ -43,8 +43,7 @@ public class CommonRoomExtract extends FeatureExtract {
                     if(f.getUnits() != null && !f.getUnits().isEmpty())
                         for(FloorUnit floorUnit : f.getUnits()) {
                             LOG.info("Processing CommonRoom for Block: " + block.getNumber() + " Floor: " + f.getNumber() + " Unit: " + floorUnit.getUnitNumber());
-//                    String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_WC"), block.getNumber(),
-//                            f.getNumber());
+
                             String layerName = layerNames.getLayerName("LAYER_NAME_BLOCK_NAME_PREFIX") + block.getNumber() + "_"
                                     + layerNames.getLayerName("LAYER_NAME_FLOOR_NAME_PREFIX") + f.getNumber() + "_"
                                     + layerNames.getLayerName("LAYER_NAME_UNIT_NAME_PREFIX") + floorUnit.getUnitNumber() + "_"

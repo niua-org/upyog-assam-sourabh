@@ -1847,7 +1847,7 @@ public class Far_Assam extends Far {
         // Check if it's Group Housing or Apartment
         boolean isGroupHousingOrApartment = occupancyType != null && occupancyType.getSubtype() != null
                 && (A_AF_GH.equalsIgnoreCase(occupancyType.getSubtype().getCode())
-                || A_AF.equalsIgnoreCase(occupancyType.getSubtype().getCode()));
+                || A_AF.equalsIgnoreCase(occupancyType.getSubtype().getCode()))	&& pl.getPlanInformation() != null && pl.getPlanInformation().getPlotType() != null && (pl.getPlanInformation().getPlotType().equalsIgnoreCase(EWS));
 
         // Check minimum plot area requirement (2000 sq.m)
         boolean meetsPlotAreaRequirement = plotArea.compareTo(TWOTHOUSAND) >= 0;

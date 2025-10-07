@@ -110,10 +110,11 @@ public class KitchenExtract extends FeatureExtract {
                                         if (allFloors.getNumber().equals(tp.getModelFloorNo())) {
                                             if (allFloors.getKitchen() != null) {
                                                 floor.setKitchen(allFloors.getKitchen());
-                                                continue outside;
                                             }
-                                            if (allFloors.getUnits() != null)
+                                            if (allFloors.getUnits() != null) {
                                                 floor.setUnits(allFloors.getUnits());
+                                            }
+                                            continue outside;
                                         }
 
                         for (FloorUnit floorUnit : floor.getUnits()) {
