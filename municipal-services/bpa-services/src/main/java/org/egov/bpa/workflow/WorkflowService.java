@@ -174,25 +174,13 @@ public class WorkflowService {
 		PlanningPermitAuthorityEnum planning = areaMappingDetail.getPlanningPermitAuthority();
 		BuildingPermitAuthorityEnum building = areaMappingDetail.getBuildingPermitAuthority();
 
-		//TODO: Temporary condition added as modules is developed for GMDA and GMC condition only
-//		if (!PlanningPermitAuthorityEnum.GMDA.equals(planning) || !BuildingPermitAuthorityEnum.GMC.equals(building)) {
-//			log.info("Workflow not configured for the PlanningAuthority: {} and BuildingAuthority: {}", planning, building);
-//			throw new CustomException(BPAErrorConstants.WORKFLOW_NOT_CONFIGURED,
-//					"Workflow not configured for the PlanningAuthority: " + planning +
-//							" and BuildingAuthority: " + building);
-//		}
-//		else if(!PlanningPermitAuthorityEnum.DA.equals(planning) || !BuildingPermitAuthorityEnum.GP.equals(building)) {
-//			log.info("Workflow not configured for the PlanningAuthority: {} and BuildingAuthority: {}", planning, building);
-//			throw new CustomException(BPAErrorConstants.WORKFLOW_NOT_CONFIGURED,
-//					"Workflow not configured for the PlanningAuthority: " + planning +
-//							" and BuildingAuthority: " + building);
-//		}
-//		else if(!PlanningPermitAuthorityEnum.DA.equals(planning) || !BuildingPermitAuthorityEnum.MB.equals(building)) {
-//			log.info("Workflow not configured for the PlanningAuthority: {} and BuildingAuthority: {}", planning, building);
-//			throw new CustomException(BPAErrorConstants.WORKFLOW_NOT_CONFIGURED,
-//					"Workflow not configured for the PlanningAuthority: " + planning +
-//							" and BuildingAuthority: " + building);
-//		}
+		/* TODO: Temporary condition added as modules is developed for GMDA and GMC condition only
+		if (!PlanningPermitAuthorityEnum.GMDA.equals(planning) || !BuildingPermitAuthorityEnum.GMC.equals(building)) {
+			log.info("Workflow not configured for the PlanningAuthority: {} and BuildingAuthority: {}", planning, building);
+			throw new CustomException(BPAErrorConstants.WORKFLOW_NOT_CONFIGURED,
+					"Workflow not configured for the PlanningAuthority: " + planning +
+							" and BuildingAuthority: " + building);
+		} */
 
 		log.debug("Evaluating business service with PlanningAuthority: {} and BuildingAuthority: {}", planning, building);
 
