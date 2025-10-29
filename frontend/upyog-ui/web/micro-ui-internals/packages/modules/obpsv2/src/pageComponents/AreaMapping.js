@@ -68,9 +68,9 @@ const [villageName, setVillageName] = useState(formData?.areaMapping?.villageNam
 
   // Update concerned authorities based on BP authority and PP authority
   useEffect(() => {
-    if (bpAuthority && ppAuthority && areaMappingData?.bpAuthorities) {
+    if (bpAuthority && planningArea && areaMappingData?.bpAuthorities) {
       const filteredConcernedAuthorities = areaMappingData.bpAuthorities
-        .filter(authority => authority.ppAuthorityCode === ppAuthority?.code && authority.authorityType === bpAuthority?.code)
+        .filter(authority => authority.planningAreaCode === planningArea?.code && authority.authorityType === bpAuthority?.code)
         .map(authority => ({
           code: authority.bpAuthorityCode,
           name: authority.bpAuthorityName,
@@ -80,7 +80,7 @@ const [villageName, setVillageName] = useState(formData?.areaMapping?.villageNam
     } else {
       setConcernedAuthorities([]);
     }
-  }, [bpAuthority, ppAuthority, areaMappingData]);
+  }, [bpAuthority, planningArea, areaMappingData]);
 
   useEffect(() => {
     if (areaMappingData?.concernedAuthorities) {
