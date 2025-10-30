@@ -587,7 +587,7 @@ public class FrontYardService_Assam extends FrontYardService {
 	            return meanVal;
 	        }
 
-	        BigDecimal diff = existingRoadWidth.subtract(proposedRoadWidth);
+	        BigDecimal diff = proposedRoadWidth.subtract(existingRoadWidth);
 	        if (diff.compareTo(BigDecimal.ZERO) > 0) {
 	            BigDecimal halfDiff = diff.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
 	            meanVal = meanVal.add(halfDiff);

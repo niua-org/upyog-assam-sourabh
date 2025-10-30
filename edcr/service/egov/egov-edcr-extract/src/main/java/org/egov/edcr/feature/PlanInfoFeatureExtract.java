@@ -233,6 +233,22 @@ public class PlanInfoFeatureExtract extends FeatureExtract {
 			plot.setPresentInDxf(true);
 			pl.setPlot(plot);
 		}
+		
+		String plotAreaAsPerLandDoc = planInfoProperties.get(DxfFileConstants.PLOT_AREA_AS_PER_LAND_DOC);
+		if (plotAreaAsPerLandDoc != null) {
+		PlotDetail plotDetail = new PlotDetail();
+	
+		plotAreaAsPerLandDoc = plotAreaAsPerLandDoc.replaceAll(digitsRegex, "");
+			BigDecimal numericValue = getNumericValue(plotAreaAsPerLandDoc, pl, DxfFileConstants.PLOT_AREA_AS_PER_LAND_DOC);
+			if (numericValue != null) {
+				pi.setPlotAreaAsPerLandDocument(numericValue);
+				
+				if (numericValue.compareTo(ONEHUDREDTWENTYFIVE) <= 0)
+					plotDetail.setSmallPlot(true);
+			}
+			plotDetail.setPresentInDxf(true);
+			pl.setPlot(plotDetail);
+		}
 
 		String noOfSeats = planInfoProperties.get(DxfFileConstants.SEATS_SP_RESI);
 		if (StringUtils.isNotBlank(noOfSeats)) {

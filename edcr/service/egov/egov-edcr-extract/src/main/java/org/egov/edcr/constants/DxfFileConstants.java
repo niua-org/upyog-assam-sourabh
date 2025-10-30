@@ -6,6 +6,7 @@ public class DxfFileConstants {
     public static final String GOVERNMENT_AIDED = "WHETHER_GOVT_OR_AIDED_SCHOOL";
     public static String CRZ_ZONE = "CRZ";
     public static final String PLOT_AREA = "PLOT_AREA_M2";
+    public static final String PLOT_AREA_AS_PER_LAND_DOC = "PLOT_AREA_AS_PER_LAND_DOC";
     public static final Object ARCHITECT_NAME = "ARCHITECT_NAME";
     public static final String PIPE_DIA = "PIPE_DIA";
     public static final String SETTLING_TANK = "SETTLING_TANK";

@@ -68,6 +68,9 @@ public class PlanInformation implements Serializable {
     private Long id;
     // Plot area defined in PLAN_INFO layer. Using the same to measure coverage and small plot condition.This is the declared plot area in the plan.
     private BigDecimal plotArea = BigDecimal.ZERO;
+    
+    private BigDecimal plotAreaAsPerLandDocument;
+    
     // Temporary field used to capture Owner Name
     private String ownerName;
     //Temporary field used to auto populate occupancy detail.
@@ -273,6 +276,14 @@ public class PlanInformation implements Serializable {
 
 	public void setTwoWheelerSlowCharger(BigDecimal twoWheelerSlowCharger) {
 		this.twoWheelerSlowCharger = twoWheelerSlowCharger;
+	}
+
+	public BigDecimal getPlotAreaAsPerLandDocument() {
+		return plotAreaAsPerLandDocument;
+	}
+
+	public void setPlotAreaAsPerLandDocument(BigDecimal plotAreaAsPerLandDocument) {
+		this.plotAreaAsPerLandDocument = plotAreaAsPerLandDocument;
 	}
 
 	public BigDecimal getTwoWheelerFastCharger() {

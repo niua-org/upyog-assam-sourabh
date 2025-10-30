@@ -34,20 +34,20 @@ public class PlantationGreenStrip_Assam extends FeatureProcess {
     public Plan process(Plan pl) {
         Optional<PlantationGreenStripRequirement> ruleOpt = getPlantationGreenStripRule(pl);
 
-        // Get min/max % from MDMS or default to 10–15%
+        // Get min % (default 10–15%) from MDMS or use defaults
         BigDecimal minPercentage = ruleOpt.map(PlantationGreenStripRequirement::getMinPercentage)
                                           .orElse(new BigDecimal("10"));
         BigDecimal maxPercentage = ruleOpt.map(PlantationGreenStripRequirement::getMaxPercentage)
                                           .orElse(new BigDecimal("15"));
 
-        BigDecimal plotArea = pl.getPlot().getArea();
+        // We’ll take minimum threshold as 10–15% depending on rule
+        BigDecimal requiredMinPercentage = maxPercentage; // if range exists, use higher end (15%)
 
-        // Convert percentage to decimal for calculation
-        BigDecimal minRequiredArea = plotArea.multiply(minPercentage).divide(BigDecimal.valueOf(100));
-        BigDecimal maxRequiredArea = plotArea.multiply(maxPercentage).divide(BigDecimal.valueOf(100));
+        BigDecimal plotArea = pl.getPlot().getArea();
+        BigDecimal minRequiredArea = plotArea.multiply(requiredMinPercentage).divide(BigDecimal.valueOf(100));
 
         for (Block block : pl.getBlocks()) {
-            processBlock(pl, block, minRequiredArea, maxRequiredArea);
+            processBlock(pl, block, minRequiredArea, requiredMinPercentage);
         }
 
         return pl;
@@ -61,7 +61,7 @@ public class PlantationGreenStrip_Assam extends FeatureProcess {
                 .findFirst();
     }
 
-    private void processBlock(Plan pl, Block block, BigDecimal minRequiredArea, BigDecimal maxRequiredArea) {
+    private void processBlock(Plan pl, Block block, BigDecimal minRequiredArea, BigDecimal minPercentage) {
         ScrutinyDetail scrutinyDetail = createScrutinyDetailForBlock(block);
 
         List<BigDecimal> areas = block.getPlantationGreenStripes().stream()
@@ -71,14 +71,16 @@ public class PlantationGreenStrip_Assam extends FeatureProcess {
         if (!areas.isEmpty()) {
             BigDecimal totalGreenArea = areas.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            boolean valid = totalGreenArea.compareTo(minRequiredArea) >= 0
-                    && totalGreenArea.compareTo(maxRequiredArea) <= 0;
+            //  Only minimum check (no max restriction)
+            boolean valid = totalGreenArea.compareTo(minRequiredArea) >= 0;
+
+            String permissible = "Minimum " + minPercentage + "% of Plot Area (≥ "
+                    + minRequiredArea.setScale(DcrConstants.DECIMALDIGITS_MEASUREMENTS, DcrConstants.ROUNDMODE_MEASUREMENTS)
+                    + " sq.m)";
 
             buildResult(pl, scrutinyDetail, valid,
-                    "Area of Plantation Green Strip (10–15% of Plot Area)",
-                    minRequiredArea.setScale(DcrConstants.DECIMALDIGITS_MEASUREMENTS, DcrConstants.ROUNDMODE_MEASUREMENTS)
-                            + " - " +
-                            maxRequiredArea.setScale(DcrConstants.DECIMALDIGITS_MEASUREMENTS, DcrConstants.ROUNDMODE_MEASUREMENTS),
+                    "Area of Plantation Green Strip (Minimum " + minPercentage + "% of Plot Area)",
+                    permissible,
                     totalGreenArea.setScale(DcrConstants.DECIMALDIGITS_MEASUREMENTS, DcrConstants.ROUNDMODE_MEASUREMENTS)
                             .toString());
         }
