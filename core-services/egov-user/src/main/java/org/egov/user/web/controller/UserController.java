@@ -1,10 +1,9 @@
 package org.egov.user.web.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.user.domain.model.*;
+import org.egov.user.domain.model.enums.SSOType;
 
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDetail;
@@ -18,10 +17,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -245,6 +242,98 @@ public class UserController {
         return new ResponseEntity<>("Mobile number validation failed", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Generic SSO OAuth Token endpoint that handles multiple SSO providers
+     * Supports: ePramaan, DigiLocker, and other SSO providers
+     * 
+     * @param createUserRequest - Contains user details and SSO information
+     * @param ssoType - SSO provider type (EPRAMAAN, DIGILOCKER, etc.)
+     * @param headers - HTTP headers
+     * @return User object with OAuth token
+     */
+    @PostMapping("/sso/oauth/token")
+    public Object authSSO(@RequestBody @Valid CreateUserRequest createUserRequest, 
+                         @RequestParam(value = "ssoType", required = false) String ssoType,
+                         @RequestHeader HttpHeaders headers) {
+        
+        log.info("Received SSO OAuth Token Request for SSO Type: {}", ssoType);
+        
+        // Determine SSO type from request param or user object
+        SSOType ssoTypeEnum = determineSSOType(ssoType, createUserRequest);
+        
+        // Set SSO fields in user object
+        if (createUserRequest.getUser().getSsoType() == null) {
+            createUserRequest.getUser().setSsoType(ssoTypeEnum);
+        }
+        if (createUserRequest.getUser().getSsoId() == null && createUserRequest.getUser().getDigilockerid() != null) {
+            createUserRequest.getUser().setSsoId(createUserRequest.getUser().getDigilockerid());
+        }
+        
+        log.info("Processing SSO authentication for type: {} without external validation", ssoTypeEnum);
+
+        UserSearchRequest request = new UserSearchRequest();
+        request.setUserName(createUserRequest.getUser().getMobileNumber());
+        request.setTenantId(createUserRequest.getUser().getTenantId());
+
+        List<UserSearchResponseContent> userContracts = searchUsers(request, headers).getUserSearchResponseContent();
+        
+        if (!userContracts.isEmpty()) {
+            // Update existing user with SSO details
+            User existingUser = userContracts.get(0).toUser();
+            User user = new User().toUser(existingUser);
+            user.setSsoId(createUserRequest.getUser().getSsoId());
+            user.setSsoType(ssoTypeEnum);
+            
+            // Maintain backward compatibility with digilockerid field
+            if (ssoTypeEnum == SSOType.DIGILOCKER) {
+                user.setDigilockerid(createUserRequest.getUser().getSsoId());
+            } else if (ssoTypeEnum == SSOType.EPRAMAAN) {
+                user.setDigilockerid(createUserRequest.getUser().getSsoId()); // Store in digilockerid for now
+            }
+            
+            user.setDigilockerRegistration(isDigiLockerRegistration);
+            
+            Object updatedUser = userService.updateSSOID(user, existingUser, createUserRequest.getRequestInfo());
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+
+        } else {
+            // Create new user with SSO details
+            User user = createUserRequest.toDomain(true);
+            user.setUsername(user.getMobileNumber());
+            user.setDigilockerRegistration(isDigiLockerRegistration);
+            user.setSsoId(createUserRequest.getUser().getSsoId());
+            user.setSsoType(ssoTypeEnum);
+            
+            // Maintain backward compatibility
+            if (ssoTypeEnum == SSOType.DIGILOCKER) {
+                user.setDigilockerid(createUserRequest.getUser().getSsoId());
+            } else if (ssoTypeEnum == SSOType.EPRAMAAN) {
+                user.setDigilockerid(createUserRequest.getUser().getSsoId());
+            }
+            
+            Object createdUser = userService.registerWithLogin(user, createUserRequest.getRequestInfo());
+            return new ResponseEntity<>(createdUser, HttpStatus.OK);
+        }
+    }
+
+    /**
+     * Helper method to determine SSO type from request
+     */
+    private SSOType determineSSOType(String ssoTypeParam, CreateUserRequest createUserRequest) {
+        // Priority 1: Request parameter
+        if (ssoTypeParam != null && !ssoTypeParam.isEmpty()) {
+            return SSOType.fromValue(ssoTypeParam);
+        }
+        
+        // Priority 2: User object ssoType
+        if (createUserRequest.getUser().getSsoType() != null) {
+            return createUserRequest.getUser().getSsoType();
+        }
+        
+        // Priority 3: Default to DIGILOCKER for backward compatibility
+        log.warn("No SSO type specified, defaulting to DIGILOCKER");
+        return SSOType.DIGILOCKER;
+    }
 
 
 

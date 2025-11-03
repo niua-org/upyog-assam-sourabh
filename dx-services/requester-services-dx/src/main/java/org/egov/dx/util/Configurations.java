@@ -134,6 +134,9 @@ public class Configurations {
 	
 	@Value("${egov.user.endpoint}")
 	private String userEndpoint;
+	
+	@Value("${egov.user.sso.endpoint}")
+	private String userSsoEndpoint;
 
 
 	// ePramaan properties

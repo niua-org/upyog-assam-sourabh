@@ -148,6 +148,11 @@ public class UserRequest {
     @Size(max = 36)
     private String digilockerid;
 
+    @SafeHtml
+    @Size(max = 100)
+    private String ssoId;
+
+    private SSOType ssoType;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
@@ -192,6 +197,8 @@ public class UserRequest {
         this.relationship = user.getGuardianRelation();
         this.uuid = user.getUuid();
         this.digilockerid = user.getDigilockerid();
+        this.ssoId = user.getSsoId();
+        this.ssoType = user.getSsoType();
         this.alternatemobilenumber=user.getAlternateMobileNumber();
         mapPermanentAddress(user);
         mapCorrespondenceAddress(user);
@@ -239,6 +246,8 @@ public class UserRequest {
                 .pan(this.pan)
                 .aadhaarNumber(this.aadhaarNumber)
                 .digilockerid(this.digilockerid)
+                .ssoId(this.ssoId)
+                .ssoType(this.ssoType)
                 .active(isActive(isCreate))
                 .dob(this.dob)
                 .passwordExpiryDate(this.pwdExpiryDate)
