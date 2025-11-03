@@ -15,6 +15,7 @@ import org.egov.user.domain.exception.InvalidUserUpdateException;
 import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
+import org.egov.user.domain.model.enums.SSOType;
 import org.egov.user.domain.model.enums.UserType;
 import org.hibernate.validator.constraints.Email;
 import org.springframework.util.CollectionUtils;
@@ -37,7 +38,9 @@ public class User {
 
     private Long id;
     private String uuid;
-    private String digilockerid;
+    private String digilockerid; // Deprecated: Use ssoId instead
+    private String ssoId; // Generic SSO provider ID
+    private SSOType ssoType; // SSO provider type (EPRAMAAN, DIGILOCKER, etc.)
     private String access_token;
 
     @Pattern(regexp = UserServiceConstants.PATTERN_TENANT)

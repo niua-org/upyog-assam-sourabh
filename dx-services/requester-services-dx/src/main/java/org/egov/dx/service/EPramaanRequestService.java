@@ -22,6 +22,8 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.repository.EPramaanMapper;
 import org.egov.dx.util.Configurations;
 import org.egov.dx.web.models.*;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -291,11 +293,10 @@ public class EPramaanRequestService {
         data.put("code", new String[] { tokenReq.getCode() });
         data.put("grant_type", new String[] {configurations.getEpGrantType() });
         data.put("scope", new String[] { configurations.getEpScope() });
-        data.put("redirect_uri", new String[] {configurations.getEpAuthGrantRequestUri()  });
-        data.put("request_uri", new String[] {configurations.getEpRedirectUri()  });
+        data.put("redirect_uri", new String[] {configurations.getEpTokenRequestUri()  });
+        data.put("request_uri", new String[] {configurations.getEpRedirectUri() });
         data.put("code_verifier", new String[] { ePramaanData.getCodeVerifier() });
         data.put("client_id", new String[] {configurations.getEpClientId() });
-
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -434,11 +435,17 @@ public class EPramaanRequestService {
 
     public Object getOauthToken(RequestInfo requestinfo , EPramaanTokenRes tokenRes)
     {
-        RestTemplate restTemplate = new RestTemplate();
         UserRequest user = new UserRequest();
         user.setMobileNumber(tokenRes.getMobileNumber());
         user.setName(tokenRes.getName());
+        
+        // Set generic SSO fields
+        user.setSsoId(tokenRes.getEpramaanId());
+        user.setSsoType("EPRAMAAN"); // Set SSO type as EPRAMAAN
+        
+        // Also set digilockerid for backward compatibility
         user.setDigilockerid(tokenRes.getEpramaanId());
+        
         //TODO: remove hard coded tenant id
         user.setTenantId("pg");
         user.setAccess_token(tokenRes.getSessionId());
@@ -448,9 +455,14 @@ public class EPramaanRequestService {
         createUserRequest.setRequestInfo(requestinfo);
         createUserRequest.setUser(user);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Object userOauth= restTemplate.postForEntity(configurations.getUserHost() + configurations.getUserEndpoint(), createUserRequest, Object.class).getBody();
+        // Use the new generic SSO endpoint with ssoType parameter
+        String url = configurations.getUserHost() + configurations.getUserSsoEndpoint() + "?ssoType=EPRAMAAN";
+        log.info("Calling SSO endpoint: {}", url);
+        
+        // Use autowired restTemplate for user service call (typically HTTP, not HTTPS)
+        Object userOauth = this.restTemplate.postForEntity(url, createUserRequest, Object.class).getBody();
         return userOauth;
     }
 
@@ -469,19 +481,59 @@ public class EPramaanRequestService {
 
     }
 
-    public EPramaanTokenRes getToken(@Valid EparmaanRequest eparmaanRequest) {
+    public Object getToken(@Valid EparmaanRequest eparmaanRequest) {
         String stateId = eparmaanRequest.getState();
         log.info("State ID received in callback: " + stateId);
+        
+        // Retrieve stored ePramaanData using state
         EPramaanData ePramaanData = stateCodeMap.get(stateId);
+        
+        // Validate that state exists
+        if (ePramaanData == null) {
+            log.error("No ePramaanData found for state: {}. State may have expired or is invalid.", stateId);
+            throw new RuntimeException("Invalid state parameter - session expired or not found. Please try logging in again.");
+        }
+        
+        log.info("Found ePramaanData for state. Code verifier and nonce retrieved successfully.");
+        
+        // Build token request with code and stored PKCE parameters
         TokenReq tokenReq = TokenReq.builder()
                 .code(eparmaanRequest.getCode())
                 .ePramaanData(ePramaanData)
                 .build();
 
+        // Exchange authorization code for ePramaan token
         EPramaanTokenRes tokenRes = getToken(tokenReq);
-        //TODO: see how to pass token id here to getOauthToken method
-        Object user = getOauthToken(null , tokenRes);
-        return  tokenRes;
+        log.info("Successfully retrieved ePramaan token for user: {}", tokenRes.getName());
+        
+        // Create default RequestInfo for callback scenario (no user session yet)
+        RequestInfo requestInfo = createDefaultRequestInfo();
+        
+        // Call user service to create/update user and get OAuth token
+        Object user = getOauthToken(requestInfo, tokenRes);
+        
+        // Clean up state from map after successful token exchange
+        stateCodeMap.remove(stateId);
+        log.info("State cleaned up from memory. User authentication completed.");
+        
+        return user;
+    }
+    
+    /**
+     * Creates a default RequestInfo for SSO callback scenarios
+     * where no user session exists yet
+     * 
+     * @return RequestInfo with default values
+     */
+    private RequestInfo createDefaultRequestInfo() {
+        RequestInfo requestInfo = new RequestInfo();
+        requestInfo.setApiId("epramaan-callback");
+        requestInfo.setVer("1.0");
+        requestInfo.setTs(Long.valueOf(DateTimeUtils.currentTimeMillis()));
+        requestInfo.setAction("create");
+        requestInfo.setMsgId(UUID.randomUUID().toString());
+        log.debug("Created default RequestInfo for callback with msgId: {}", requestInfo.getMsgId());
+        return requestInfo;
     }
 
 

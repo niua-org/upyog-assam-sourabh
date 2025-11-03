@@ -694,7 +694,50 @@ public class UserService {
     	//user = decryptionDecryptionUtil.decryptObject(user, "User", User.class);        
     	return getAccess(user, user.getOtpReference());
     	}
-    }    /**
+    }
+    
+    /**
+     * Generic method to update SSO ID for any SSO provider type
+     * This method handles both new SSO registrations and existing SSO ID validations
+     * 
+     * @param user - User object with new SSO details
+     * @param existingUser - Existing user from database
+     * @param requestInfo - Request information
+     * @return OAuth access token response
+     */
+    public Object updateSSOID(User user, User existingUser, RequestInfo requestInfo) {
+        log.info("Updating SSO ID for user: {} with SSO Type: {}", existingUser.getUuid(), user.getSsoType());
+        
+        // Check if user already has SSO ID
+        if (existingUser.getSsoId() != null) {
+            // Verify SSO ID matches
+            if (!existingUser.getSsoId().equals(user.getSsoId())) {
+                throw new IllegalArgumentException(
+                    String.format("SSO ID provided (%s) does not match the SSO ID in the database (%s) for the user", 
+                                  user.getSsoId(), existingUser.getSsoId())
+                );
+            }
+            // Verify SSO Type matches if it exists
+            if (existingUser.getSsoType() != null && !existingUser.getSsoType().equals(user.getSsoType())) {
+                throw new IllegalArgumentException(
+                    String.format("SSO Type provided (%s) does not match the SSO Type in the database (%s) for the user", 
+                                  user.getSsoType(), existingUser.getSsoType())
+                );
+            }
+            // SSO ID already exists and matches, just return access token
+            log.info("SSO ID already registered, returning access token");
+            return getAccess(user, user.getOtpReference());
+        } else {
+            // New SSO registration - update user with SSO details
+            log.info("New SSO registration, updating user with SSO ID: {} and Type: {}", user.getSsoId(), user.getSsoType());
+            user = encryptionDecryptionUtil.encryptObject(user, "User", User.class);
+            userRepository.update(user, existingUser, existingUser.getId(), existingUser.getUuid());
+            user = encryptionDecryptionUtil.decryptObject(user, null, User.class, requestInfo);
+            return getAccess(user, user.getOtpReference());
+        }
+    }
+    
+    /**
      * Creates an address entry for the given user based on the provided UUID.
      * It first retrieves the user ID from the database using the UUID.
      * If the UUID is invalid (i.e., no user found), an exception is thrown.
