@@ -344,7 +344,13 @@ export const OBPSV2Services = {
       collectionBillArray = [],
       totalAmount = 0,
       collectionBillRes = [];
-    appBusinessService = ["BPA.PLANNING_PERMIT_FEE"];
+    if (bpa?.status === "PAYMENT_PENDING") {
+      appBusinessService = ["BPA.PLANNING_PERMIT_FEE"];
+    } else if (bpa?.status === "CITIZEN_FINAL_PAYMENT") {
+      appBusinessService = ["BPA.BUILDING_PERMIT_FEE"];
+    } else {
+      appBusinessService = ["BPA.PLANNING_PERMIT_FEE"];
+    }
     let fetchBillRes = {};
 
     if (appBusinessService?.[1]) {
@@ -667,16 +673,11 @@ export const OBPSV2Services = {
           value: landInfo?.units?.[0]?.occupancyType || "NA",
         },
       ],
-    };
-    const documentDetails =  {
-      title: "BPA_DOCUMENT_DETAILS_LABEL",
-      asSectionHeader: true,
-      isDocumentDetails: true,
       additionalDetails: {
         obpsDocuments: [{
           title: "",
-          values: bpa?.documents?.map(doc => ({
-            title: doc?.documentType?.replaceAll('.', '_'),
+          values: landInfo?.documents?.map(doc => ({
+            title: doc?.documentType?.replaceAll('.', '.'),
             documentType: doc?.documentType,
             documentUid: doc?.documentUid,
             fileStoreId: doc?.fileStoreId,
@@ -686,6 +687,24 @@ export const OBPSV2Services = {
         }]
       },
     };
+    const documentDetails = bpa?.documents && bpa.documents.length > 0 ? {
+      title: "BPA_DOCUMENT_DETAILS_LABEL",
+      asSectionHeader: true,
+      isDocumentDetails: true,
+      additionalDetails: {
+        obpsDocuments: [{
+          title: "",
+          values: bpa.documents.map(doc => ({
+            title: doc?.documentType,
+            documentType: doc?.documentType,
+            documentUid: doc?.documentUid,
+            fileStoreId: doc?.fileStoreId,
+            id: doc?.id,
+            url: fileDetails?.data?.[doc?.fileStoreId] ? fileDetails?.data?.[doc?.fileStoreId]?.split(',')[0] : ""
+          }))
+        }]
+      },
+    } : null;
     const formDetails = form22 && form23A &&{
       title: "BPA_FORM_DETAILS",
       asSectionHeader: true,
