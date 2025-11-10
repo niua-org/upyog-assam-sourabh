@@ -98,7 +98,7 @@ public class PaymentUpdateService {
 								"No Building Plan Application found for the comsumerCode "
 										+ searchCriteria.getApplicationNo());
 					}
-					Workflow workflow = Workflow.builder().action("FORWARDED_TO_TECHNICAL_ENGINEER_MB").build();
+					Workflow workflow = Workflow.builder().action("PAY").build();
 					bpas.forEach(bpa -> bpa.setWorkflow(workflow));
 					
 					// FIXME check if the update call to repository can be avoided

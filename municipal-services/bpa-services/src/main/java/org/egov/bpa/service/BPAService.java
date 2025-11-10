@@ -152,8 +152,6 @@ public class BPAService {
 
         wfIntegrator.callWorkFlow(bpaRequest);
 
-        //nocService.createNocRequest(bpaRequest, mdmsData);
-
      //   this.addCalculation(applicationType, bpaRequest);
 
         log.info("bpaRequest before create : " + String.valueOf(bpaRequest.getBPA().getApplicationNo()) + "---"
@@ -202,7 +200,7 @@ public class BPAService {
      * @param applicationType
      * @param bpaRequest
      */
-	private void addCalculation(BPARequest bpaRequest) {
+	private void addCalculation(BPARequest bpaRequest, String feeType) {
 
 		BPA bpa = bpaRequest.getBPA();
 		bpa.setTenantId(bpa.getTenantId());
@@ -212,7 +210,7 @@ public class BPAService {
 		floors.add(new Floor(1, bpa.getLandInfo().getTotalPlotArea(), BigDecimal.ZERO));
 		bpa.setFloors(floors);
 		bpa.setWallType("");
-		bpa.setFeeType("PLANNING_PERMIT_FEE");
+		bpa.setFeeType(feeType);
 		bpa.setTotalBuiltUpArea(bpa.getLandInfo().getTotalPlotArea());
 		bpaRequest.setBPA(bpa);
 
@@ -506,8 +504,16 @@ public class BPAService {
 			wfIntegrator.callWorkFlow(bpaRequest);
 			repository.update(bpaRequest, BPAConstants.UPDATE_ALL_BUILDING_PLAN);
 			bpaRequest.getBPA().setFloors(floors);
-			addCalculation(bpaRequest);
+			addCalculation(bpaRequest, "PLANNING_PERMIT_FEE");
 			landService.updateLandInfo(bpaRequest);
+			break;
+
+		case "SUBMIT_REPORT":
+			Object mdmsData = util.mDMSCall(requestInfo, tenantId);
+	        nocService.createNocRequest(bpaRequest, mdmsData);
+            enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
+            wfIntegrator.callWorkFlow(bpaRequest);
+            repository.update(bpaRequest, BPAConstants.UPDATE);
 			break;
 
 		default:
@@ -517,6 +523,10 @@ public class BPAService {
 			break;
 		}
 
+        if ("PENDING_CHAIRMAN_PRESIDENT_MB".equalsIgnoreCase(bpaRequest.getBPA().getStatus())
+                || "PENDING_CHAIRMAN_PRESIDENT_GP".equalsIgnoreCase(bpaRequest.getBPA().getStatus())) {
+            addCalculation(bpaRequest, "BUILDING_PERMIT_FEE");
+        }
 		return bpaRequest.getBPA();
 
       //  Map<String, String> additionalDetails = bpa.getAdditionalDetails() != null ? (Map<String, String>) bpa.getAdditionalDetails()
