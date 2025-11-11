@@ -137,6 +137,7 @@ public class BPANotificationService {
 		List<String> messages = util.getCustomizedMsg(bpaRequest.getRequestInfo(), bpaRequest.getBPA(), localizationMessages);
 		log.info("messages :"+messages.toString());
 		if (messages.isEmpty()) {
+			log.info("No messages found");
 			return;
 		}
 
@@ -148,6 +149,7 @@ public class BPANotificationService {
 		if (configuredChannelNames.contains(CHANNEL_NAME_SMS)) {
 			if (null != config.getIsSMSEnabled()) {
 				if (config.getIsSMSEnabled()) {
+					log.info("SMS Requests :"+smsRequests.toString());
 					if (!CollectionUtils.isEmpty(smsRequests)) {
 						util.sendSMS(smsRequests, config.getIsSMSEnabled(), tenantId);
 					}
@@ -159,6 +161,7 @@ public class BPANotificationService {
 			if (null != config.getIsUserEventsNotificationEnabled()) {
 				if (config.getIsUserEventsNotificationEnabled()) {
 					EventRequest eventRequest = getEventNotification(bpaRequest, smsRequests);
+					log.info("Event Requests :"+eventRequest.toString());
 					if (null != eventRequest) {
 						util.sendEventNotification(eventRequest, tenantId);
 					}
@@ -182,7 +185,7 @@ public class BPANotificationService {
 						emailRequests.addAll(
 								util.createEmailRequest(bpaRequest, message, mapOfPhnoAndEmail, mobileNumberToOwner));
 					}
-					
+					log.info("Email Requests :"+emailRequests.toString());					
 					if (!CollectionUtils.isEmpty(emailRequests)) {
 						util.sendEmail(emailRequests, tenantId);
 					}
