@@ -133,6 +133,8 @@ public class GisServiceImpl implements GisService {
                     .zone(ward) // Using ward as zone
                     .wfsResponse(gistcpJson) // GISTCP response replaces WFS response
                     .fileStoreId(fileStoreId)
+                    .latitude(latitude)
+                    .longitude(longitude)
                     .build();
 
         } catch (Exception e) {
