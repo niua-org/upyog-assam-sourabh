@@ -2,13 +2,10 @@ package org.egov.bpa.web.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.egov.bpa.config.SoftThinkFeignConfig;
 import org.egov.bpa.exception.PropertyServiceException;
-import org.egov.bpa.service.property.sumato.SumatoPropertyValidationService;
-import org.egov.bpa.service.property.softthink.SoftThinkPropertyValidationService;
+import org.egov.bpa.service.property.PropertyValidationService;
+import org.egov.bpa.web.model.property.PropertyValidationResponse;
 import org.egov.bpa.web.model.property.sumato.PropertyRequest;
-import org.egov.bpa.web.model.property.sumato.SumatoPropertyValidationResponse;
-import org.egov.bpa.web.model.property.softthink.SoftThinkPropertyValidationResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,31 +20,17 @@ import java.util.Map;
 @Slf4j
 public class PropertyController {
 
-    private final SumatoPropertyValidationService sumatopropertyValidationService;
-    private final SoftThinkPropertyValidationService softThinkPropertyValidationService;
-    private final SoftThinkFeignConfig softThinkConfig;
+    private final PropertyValidationService propertyValidationService;
 
     /**
      * Single API endpoint to validate property and check tax paid status
      *
      * @param propertyRequest - PropertyRequest containing property number and request info
-     * @return Response with validation status and tax paid status
+     * @return PropertyValidationResponse with validation status and tax paid status
      */
     @PostMapping("/validate")
-    public ResponseEntity<?> validateProperty(@Valid @RequestBody PropertyRequest propertyRequest) {
-        String propertyNumber = propertyRequest.getPropertyNumber();
-        String tenantId = propertyRequest.getTenantId().split("\\.")[1];
-        log.info("Received property validation request for property number: {} in tenant: {}",propertyNumber, tenantId);
-
-        if (softThinkConfig.supportedCities.contains(tenantId)) {
-            log.info("Property validation request for property number: {} in tenant: {} is handled by SoftThink", propertyNumber, tenantId);
-            SoftThinkPropertyValidationResponse response = softThinkPropertyValidationService.validatePropertyWithTaxStatus(propertyNumber);
-            return ResponseEntity.ok(response);
-        } else {
-            SumatoPropertyValidationResponse response = sumatopropertyValidationService
-                    .validatePropertyWithTaxStatus(propertyNumber);
-            return ResponseEntity.ok(response);
-        }
+    public ResponseEntity<PropertyValidationResponse> validateProperty(@Valid @RequestBody PropertyRequest propertyRequest) {
+        return ResponseEntity.ok(propertyValidationService.validateProperty(propertyRequest));
     }
 
     @ExceptionHandler(PropertyServiceException.class)

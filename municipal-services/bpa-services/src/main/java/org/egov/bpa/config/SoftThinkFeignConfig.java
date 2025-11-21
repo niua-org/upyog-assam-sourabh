@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SoftThinkFeignConfig {
-    @Value("${softthink.supported.cities}")
-    public String supportedCities;
+    @Value("${softthink.property.cities}")
+    public String softthinkPropertyCities;
 
     @Bean("softThinkErrorDecoder")
     public ErrorDecoder softThinkErrorDecoder() {

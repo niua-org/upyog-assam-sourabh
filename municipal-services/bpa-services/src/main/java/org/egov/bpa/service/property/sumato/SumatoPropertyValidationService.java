@@ -1,8 +1,8 @@
 package org.egov.bpa.service.property.sumato;
+import org.egov.bpa.web.model.property.PropertyDetails;
+import org.egov.bpa.web.model.property.PropertyValidationResponse;
 import org.egov.bpa.web.model.property.sumato.SumatoPropertyRequest;
 import org.egov.bpa.web.model.property.sumato.SumatoPropertyResponse;
-import org.egov.bpa.web.model.property.sumato.SumatoPropertyValidationResponse;
-import org.egov.bpa.web.model.property.sumato.SumatoPropertyDetails;
 import org.egov.bpa.exception.PropertyNotFoundException;
 import org.egov.bpa.exception.PropertyServiceException;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class SumatoPropertyValidationService {
     /**
      * Validates property and returns complete validation response with tax status
      */
-    public SumatoPropertyValidationResponse validatePropertyWithTaxStatus(String propertyNumber) {
+    public PropertyValidationResponse validatePropertyWithTaxStatus(String propertyNumber) {
         try {
             log.info("Validating property with number: {}", propertyNumber);
 
@@ -50,12 +50,12 @@ public class SumatoPropertyValidationService {
             // Get tax paid status
             boolean taxPaid = isTaxPaid(response);
 
-            // Build validation response
-            SumatoPropertyValidationResponse validationResponse = SumatoPropertyValidationResponse.builder()
+            PropertyValidationResponse validationResponse = PropertyValidationResponse.builder()
                     .property(propertyNumber)
                     .isValid(isValid)
                     .taxPaid(taxPaid)
                     .message(isValid ? "Property validation successful" : "Property validation failed")
+                    .status(String.valueOf(response.getStatus()))
                     .details(mapToPropertyDetails(response))
                     .build();
 
@@ -66,11 +66,12 @@ public class SumatoPropertyValidationService {
 
         } catch (PropertyNotFoundException e) {
             log.error("Property not found: {}", propertyNumber);
-            return SumatoPropertyValidationResponse.builder()
+            return PropertyValidationResponse.builder()
                     .property(propertyNumber)
                     .isValid(false)
                     .taxPaid(false)
                     .message("Property not found")
+                    .status("404")
                     .build();
         } catch (PropertyServiceException e) {
             log.error("Service error during validation: {}", e.getMessage());
@@ -104,12 +105,12 @@ public class SumatoPropertyValidationService {
     /**
      * Maps SumatoPropertyResponse to SumatoPropertyDetails
      */
-    private SumatoPropertyDetails mapToPropertyDetails(SumatoPropertyResponse response) {
+    private PropertyDetails mapToPropertyDetails(SumatoPropertyResponse response) {
         if (response == null || response.getData() == null) {
             return null;
         }
-        
-        return SumatoPropertyDetails.builder()
+
+        return PropertyDetails.builder()
                 .ownerName(response.getData().getOwnerName())
                 .guardianName(response.getData().getGuardianName())
                 .address(response.getData().getAddress())
@@ -117,6 +118,7 @@ public class SumatoPropertyValidationService {
                 .ulb(response.getData().getUlb())
                 .ward(response.getData().getWard())
                 .buildingUse(response.getData().getBuildingUse())
+                .propertyVendor("SUMATO")
                 .build();
     }
 }

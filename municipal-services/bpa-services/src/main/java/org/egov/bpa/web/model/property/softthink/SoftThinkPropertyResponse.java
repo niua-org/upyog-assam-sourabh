@@ -14,5 +14,5 @@ public class SoftThinkPropertyResponse {
     private String status;
     private String message;
     @JsonProperty("ResultData")
-    private SoftThinkResultData resultData;
+    private SoftThinkPropertyResultData resultData;
 }

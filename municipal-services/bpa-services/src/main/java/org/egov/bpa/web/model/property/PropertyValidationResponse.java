@@ -1,4 +1,4 @@
-package org.egov.bpa.web.model.property.softthink;
+package org.egov.bpa.web.model.property;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SoftThinkPropertyValidationResponse {
-    private String HoldingNumber;
+public class PropertyValidationResponse {
+    private String property;
     private boolean isValid;
     private boolean taxPaid;
     private String message;
     private String status;
-    private SoftThinkResultData resultData;
+    private PropertyDetails details;
 }
