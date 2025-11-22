@@ -5,10 +5,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.egov.common.contract.request.RequestInfo;
+import java.util.List;
 import org.egov.common.contract.response.ResponseInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.upyog.gis.model.*;
 import org.upyog.gis.service.GisService;
+import org.upyog.gis.util.ResponseInfoFactory;
 
-import java.util.List;
 
 /**
  * REST controller for GIS operations
@@ -29,6 +28,9 @@ import java.util.List;
 public class GisController {
 
     private final GisService gisService;
+
+    @Autowired
+    private final ResponseInfoFactory responseInfoFactory;
 
     /**
      * Find zone information from polygon file
@@ -73,6 +75,14 @@ public class GisController {
         }
     }
 
+    /**
+     * Search GIS logs based on criteria.
+     * 
+     * <p>Searches GIS processing logs with filters like tenantId, applicationNo, rtpId, and status.
+     *
+     * @param searchRequest the search request containing RequestInfo and GisSearchCriteria
+     * @return response containing list of matching GIS log records
+     */
     @ApiOperation(value = "Search GIS logs", notes = "Search GIS processing logs based on criteria")
     @ApiResponses({
             @ApiResponse(code = 200, message = "OK")
@@ -87,9 +97,12 @@ public class GisController {
 
             List<GisLog> gisLogs = gisService.searchGisLog(searchRequest.getCriteria());
 
+            ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(
+                    searchRequest.getRequestInfo(), true);
+
             GisLogSearchResponse response = GisLogSearchResponse.builder()
-                    .responseInfo(createResponseInfo(searchRequest.getRequestInfo()))
-                    .gisLogs(gisLogs)
+                    .responseInfo(responseInfo)
+                    .gis(gisLogs)
                     .build();
 
             return ResponseEntity.ok(response);
@@ -104,14 +117,4 @@ public class GisController {
         }
     }
 
-    private ResponseInfo createResponseInfo(RequestInfo requestInfo) {
-        return ResponseInfo.builder()
-                .apiId(requestInfo != null ? requestInfo.getApiId() : null)
-                .ver(requestInfo != null ? requestInfo.getVer() : null)
-                .ts(System.currentTimeMillis())
-                .resMsgId("uief87324")
-                .msgId(requestInfo != null ? requestInfo.getMsgId() : null)
-                .status("successful")
-                .build();
-    }
 }

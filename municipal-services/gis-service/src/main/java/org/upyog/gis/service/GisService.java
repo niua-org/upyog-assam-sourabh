@@ -24,6 +24,4 @@ public interface GisService {
 
 
     List<GisLog> searchGisLog(GisLogSearchCriteria criteria);
-
-    Integer getGisLogCount(GisLogSearchCriteria criteria);
 }

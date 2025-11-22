@@ -63,37 +63,4 @@ public class GisQueryBuilder {
         return query.toString();
     }
 
-    public String getCountQuery(GisLogSearchCriteria criteria, List<Object> preparedStmtList) {
-        StringBuilder query = new StringBuilder("SELECT COUNT(*) FROM ug_gis_log");
-        List<String> conditions = new ArrayList<>();
-
-        if (criteria != null) {
-            if (StringUtils.hasText(criteria.getTenantId())) {
-                conditions.add("tenant_id = ?");
-                preparedStmtList.add(criteria.getTenantId());
-            }
-
-            if (StringUtils.hasText(criteria.getApplicationNo())) {
-                conditions.add("application_no = ?");
-                preparedStmtList.add(criteria.getApplicationNo());
-            }
-
-            if (StringUtils.hasText(criteria.getRtpId())) {
-                conditions.add("rtpi_id = ?");
-                preparedStmtList.add(criteria.getRtpId());
-            }
-
-            if (StringUtils.hasText(criteria.getStatus())) {
-                conditions.add("status = ?");
-                preparedStmtList.add(criteria.getStatus());
-            }
-        }
-
-        if (!conditions.isEmpty()) {
-            query.append(" WHERE ");
-            query.append(String.join(" AND ", conditions));
-        }
-
-        return query.toString();
-    }
 }

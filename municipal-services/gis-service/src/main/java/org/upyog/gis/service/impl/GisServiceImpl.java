@@ -233,13 +233,4 @@ public class GisServiceImpl implements GisService {
     }
 
 
-    @Override
-    public Integer getGisLogCount(GisLogSearchCriteria criteria) {
-        log.info("Counting GIS logs with criteria: {}", criteria);
-
-        if(criteria.isEmpty()){
-            throw new IllegalArgumentException("At least one search parameter is required");
-        }
-        return logRepository.count(criteria);
-    }
 }

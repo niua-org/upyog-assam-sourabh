@@ -64,12 +64,4 @@ public class GisLogRepository {
         return jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
     }
 
-    public Integer count(GisLogSearchCriteria criteria) {
-        List<Object> preparedStmtList = new ArrayList<>();
-        String query = queryBuilder.getCountQuery(criteria, preparedStmtList);
-
-        log.debug("Executing count query: {}", query);
-
-        return jdbcTemplate.queryForObject(query, preparedStmtList.toArray(), Integer.class);
-    }
 }
