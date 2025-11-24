@@ -148,7 +148,6 @@ public class BPAService {
         //TODO : Need to remove after adding mdms data
         //bpaValidator.validateCreate(bpaRequest, mdmsData, values);
 
-        //TODO : Need to remove after getting land info
         landService.addLandInfoToBPA(bpaRequest);
         enrichmentService.enrichBPACreateRequest(bpaRequest, mdmsData, null);
 
