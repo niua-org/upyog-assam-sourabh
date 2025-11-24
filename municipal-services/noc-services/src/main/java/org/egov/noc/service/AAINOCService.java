@@ -12,6 +12,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.egov.noc.util.NOCUtil;
 import org.egov.noc.web.model.BpaApplication;
 import org.egov.noc.web.model.Noc;
 import org.egov.noc.web.model.SiteCoordinate;
@@ -39,7 +40,14 @@ public class AAINOCService {
 	@Autowired
 	private NOCService nocService;
 
+	@Autowired
+	private NOCUtil nocUtil;
+
+	@Autowired
+	private TestDataService testDataService;
+
 	public String generateNocasXml() {
+
 		try {
 			// Fetch all applications in CREATED status
 			List<BpaApplication> applications = getCreatedApplications();
@@ -136,7 +144,7 @@ public class AAINOCService {
 
 		List<BpaApplication> result = new ArrayList<>();
 		List<Noc> nocList = nocService.fetchNewAAINOCs();
-		List<BPA> bpaDetails = nocService.getBPADetails(nocList, null);
+		List<BPA> bpaDetails = nocService.getBPADetails(nocList, nocUtil.createDefaultRequestInfo());
 
 		for (BPA bpa : bpaDetails) {
 			BpaApplication obj = new BpaApplication();
@@ -149,13 +157,15 @@ public class AAINOCService {
 			obj.setApplicantEmail(bpa.getLandInfo().getOwners().get(0).getEmailId());
 			obj.setApplicationNo(bpa.getApplicationNo());
 			obj.setOwnerName(bpa.getLandInfo().getOwners().get(0).getName());
-			obj.setOwnerAddress(bpa.getLandInfo().getOwners().get(0).getPermanentAddress());
+			// .toString() - TO_BE_CHANGED
+			obj.setOwnerAddress(bpa.getLandInfo().getOwners().get(0).getPermanentAddress().toString()); // #TOBECHANGED
 			obj.setStructureType("");
 			obj.setStructurePurpose("");
-			obj.setSiteAddress(bpa.getLandInfo().getOwners().get(0).getPermanentAddress());
+			// .toString() - TO_BE_CHANGED
+			obj.setSiteAddress(bpa.getLandInfo().getOwners().get(0).getPermanentAddress().toString());
 			obj.setSiteCity(bpa.getLandInfo().getOwners().get(0).getPermanentCity());
 			obj.setSiteState("");
-			obj.setPlotSize(null);
+			obj.setPlotSize(bpa.getLandInfo().getTotalPlotArea().doubleValue());
 			obj.setIsInAirportPremises("");
 			obj.setPermissionTaken("");
 			result.add(obj);

@@ -83,10 +83,10 @@ public class NOCRepository {
 		List<Noc> nocList = jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
 		return nocList;
 	}
-	
+
 	public List<Noc> getNewAAINocData(NocSearchCriteria criteria) {
 
-		StringBuilder query = new StringBuilder("SELECT NOC.APPLICATIONNO FROM EG_NOC NOC WHERE 1=1");
+		StringBuilder query = new StringBuilder("SELECT NOC.SOURCEREFID, NOC.TENANTID FROM EG_NOC NOC WHERE 1=1");
 
 		String nocType = criteria.getNocType();
 		if (nocType != null && !nocType.trim().isEmpty()) {
@@ -104,7 +104,8 @@ public class NOCRepository {
 
 		return jdbcTemplate.query(query.toString(), (rs, rowNum) -> {
 			Noc noc = new Noc();
-			noc.setApplicationNo(rs.getString("applicationno"));
+			noc.setSourceRefId(rs.getString("SOURCEREFID"));
+			noc.setTenantId(rs.getString("TENANTID"));
 			return noc;
 		});
 	}
