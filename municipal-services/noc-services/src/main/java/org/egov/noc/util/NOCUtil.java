@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.Role;
+import org.egov.common.contract.request.User;
 import org.egov.mdms.model.MasterDetail;
 import org.egov.mdms.model.MdmsCriteria;
 import org.egov.mdms.model.MdmsCriteriaReq;
@@ -13,6 +15,7 @@ import org.egov.mdms.model.ModuleDetail;
 import org.egov.noc.config.NOCConfiguration;
 import org.egov.noc.repository.ServiceRequestRepository;
 import org.egov.noc.web.model.AuditDetails;
+import org.egov.noc.web.model.RequestInfoWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -108,5 +111,54 @@ public class NOCUtil {
 		Object result = serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
 		return result;
 	}
-	
+
+	public RequestInfoWrapper createDefaultRequestInfo() {
+
+		// Build RequestInfo
+		RequestInfo requestInfo = new RequestInfo();
+		requestInfo.setApiId("Rainmaker");
+		requestInfo.setAuthToken("0f78601f-835d-4b0b-8321-58cccb5bd3cf");
+		requestInfo.setMsgId("1762511663946|en_IN");
+//		requestInfo.setPlainAccessRequest(new HashMap<>()); // {}
+
+		// Build UserInfo
+		User user = new User();
+		user.setId(95L);
+		user.setUuid("427a327d-a70a-490e-8447-66827cba169a");
+		user.setUserName("7000000002");
+		user.setName("Nikhil");
+		user.setMobileNumber("7000000002");
+		user.setEmailId("nikhil@gmail.com");
+//	    user.setLocale(null);
+		user.setType("CITIZEN");
+//	    user.setActive(true);
+		user.setTenantId("pg");
+//	    user.setPermanentCity(null);
+
+		// Build roles
+		List<Role> roles = new ArrayList<>();
+
+		Role citizenRole = new Role();
+		citizenRole.setName("Citizen");
+		citizenRole.setCode("CITIZEN");
+		citizenRole.setTenantId("pg");
+		roles.add(citizenRole);
+
+		Role architectRole = new Role();
+		architectRole.setName("BPA Architect");
+		architectRole.setCode("BPA_ARCHITECT");
+		architectRole.setTenantId("pg");
+		roles.add(architectRole);
+
+		user.setRoles(roles);
+
+		// Attach userInfo
+		requestInfo.setUserInfo(user);
+
+		// Wrap into RequestInfoWrapper
+		RequestInfoWrapper wrapper = new RequestInfoWrapper();
+		wrapper.setRequestInfo(requestInfo);
+
+		return wrapper;
+	}
 }

@@ -33,7 +33,7 @@ public class BPAResponse   {
   @JsonProperty("ResponseInfo")
   private ResponseInfo responseInfo;
 
-  @JsonProperty("BPA")
+  @JsonProperty("bpa")
   private List<BPA> BPA;
   
   @JsonProperty("Count")

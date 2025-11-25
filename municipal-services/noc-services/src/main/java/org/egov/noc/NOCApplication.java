@@ -44,9 +44,11 @@ import org.egov.tracer.config.TracerConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
+import org.springframework.ws.config.annotation.EnableWs;
 
 @SpringBootApplication
 @Import({ TracerConfiguration.class, MultiStateInstanceUtil.class })
+@EnableWs
 public class NOCApplication {
 
 	public static void main(String[] args) {

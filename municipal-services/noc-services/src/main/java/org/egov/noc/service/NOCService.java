@@ -1,7 +1,13 @@
 package org.egov.noc.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.utils.MultiStateInstanceUtil;
 import org.egov.noc.config.NOCConfiguration;
@@ -10,6 +16,7 @@ import org.egov.noc.repository.ServiceRequestRepository;
 import org.egov.noc.util.NOCConstants;
 import org.egov.noc.util.NOCUtil;
 import org.egov.noc.validator.NOCValidator;
+import org.egov.noc.web.model.BpaApplication;
 import org.egov.noc.web.model.Noc;
 import org.egov.noc.web.model.NocRequest;
 import org.egov.noc.web.model.NocSearchCriteria;
@@ -29,7 +36,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -296,5 +305,48 @@ public class NOCService {
                 criteria.setAccountId(uuids);*/
                 return nocRepository.getNocCount(criteria);
         }
-	
-}
+        
+		/**
+		 * Fetches newly created AAI NOC applications based on predefined criteria.
+		 *
+		 * @return list of NOC records in CREATED status for AAI types
+		 */
+		public List<Noc> fetchNewAAINOCs() {
+			NocSearchCriteria criteria = new NocSearchCriteria();
+			criteria.setApplicationStatus("CREATED");
+			criteria.setNocType("CIVIL_AVIATION,CIVIL_AVIATION_AZARA");
+			return nocRepository.getNewAAINocData(criteria);
+		}
+
+		/**
+		 * Retrieves BPA details for each NOC by calling the BPA service.
+		 *
+		 * @param nocList            list of NOC applications
+		 * @param requestInfoWrapper request info for service call
+		 * @return list of BPA objects mapped from service responses
+		 */
+		public List<BPA> getBPADetails(List<Noc> nocList, RequestInfoWrapper requestInfoWrapper) {
+
+			List<BPA> bpaList = new ArrayList<>();
+
+			for (Noc noc : nocList) {
+
+				StringBuilder uri = new StringBuilder(config.getBpaHost());
+				uri.append(config.getBpaContextPath());
+				uri.append(config.getBpaSearchEndpoint());
+				uri.append("?tenantId=").append(noc.getTenantId());
+				uri.append("&applicationNo=").append(noc.getSourceRefId());
+
+				Object result = serviceRequestRepository.fetchResult(uri, requestInfoWrapper);
+				try {
+					BPAResponse bpaResponse = mapper.convertValue(result, BPAResponse.class);
+					List<BPA> bpa = bpaResponse.getBPA();
+					bpaList.addAll(bpa);
+				} catch (IllegalArgumentException e) {
+					throw new CustomException(NOCConstants.PARSING_ERROR, "Failed to parse response of BPA");
+				}
+			}
+			return bpaList;
+		}
+
+	}

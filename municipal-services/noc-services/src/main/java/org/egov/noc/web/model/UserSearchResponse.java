@@ -1,15 +1,13 @@
 package org.egov.noc.web.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import org.egov.common.contract.request.User;
+import org.egov.noc.web.model.bpa.Address;
 import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -75,7 +73,7 @@ public class UserSearchResponse extends User{
 
     @Size(max=300)
     @JsonProperty("permanentAddress")
-    private String permanentAddress;
+    private Address permanentAddress;
 
     @Size(max=300)
     @JsonProperty("permanentCity")
@@ -95,7 +93,7 @@ public class UserSearchResponse extends User{
 
     @Size(max=300)
     @JsonProperty("correspondenceAddress")
-    private String correspondenceAddress;
+    private Address correspondenceAddress;
 
     @JsonProperty("active")
     private Boolean active;
