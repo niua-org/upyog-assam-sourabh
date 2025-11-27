@@ -76,6 +76,12 @@ public class BPAConfiguration {
 	@Value("${egov.idgen.bpa.buildingPermitNum.format}")
 	private String buildingPermitIdgenFormat;
 
+	@Value("${egov.idgen.bpa.occupancyCertificateNum.name}")
+	private String occupancyCertificateIdgenName;
+
+	@Value("${egov.idgen.bpa.occupancyCertificateNum.format}")
+	private String occupancyCertificateIdgenFormat;
+
 	@Value("${egov.idgen.bpa.ppReceiptNum.name}")
 	private String ppReceiptIdgenName;
 
@@ -87,6 +93,13 @@ public class BPAConfiguration {
 
 	@Value("${egov.idgen.bpa.bpReceiptNum.format}")
 	private String bpReceiptIdgenFormat;
+	
+	@Value("${egov.idgen.bpa.ocReceiptNum.name}")
+	private String ocReceiptIdgenName;
+
+	@Value("${egov.idgen.bpa.ocReceiptNum.format}")
+	private String ocReceiptIdgenFormat;
+
 
 
 	// Persister Config

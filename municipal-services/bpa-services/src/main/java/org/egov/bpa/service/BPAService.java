@@ -528,6 +528,9 @@ public class BPAService {
 		case "PAY":// CITIZEN_FINAL_PAYMENT
 			bpaRequest.getBPA().setBuildingPermitNo(getBuildingPermitNo(bpaRequest));
 			bpaRequest.getBPA().setBuildingPermitDate(Calendar.getInstance().getTimeInMillis());
+			// TO_BE_CHANGED
+			bpaRequest.getBPA().setOccupancyCertificateNo(getOccupancyCertificateNo(bpaRequest));
+			bpaRequest.getBPA().setOccupancyCertificateDate(Calendar.getInstance().getTimeInMillis());
 			enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
 			wfIntegrator.callWorkFlow(bpaRequest);
 			repository.update(bpaRequest, BPAConstants.UPDATE);
@@ -606,6 +609,18 @@ public class BPAService {
 
     }
 
+	private String getOccupancyCertificateNo(BPARequest bpaRequest) {
+
+		List<IdResponse> idResponses = idGenRepository
+				.getId(bpaRequest.getRequestInfo(), bpaRequest.getBPA().getTenantId(),
+						config.getOccupancyCertificateIdgenName(), config.getOccupancyCertificateIdgenFormat(), 1)
+				.getIdResponses();
+
+		if (idResponses != null && !idResponses.isEmpty()) {
+			return idResponses.get(0).getId();
+		}
+		return "";
+	}
 	private String getPlanningPermitNo(BPARequest bpaRequest) {
 
 		List<IdResponse> idResponses = idGenRepository
