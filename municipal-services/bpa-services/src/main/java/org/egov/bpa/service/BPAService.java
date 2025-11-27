@@ -8,6 +8,7 @@ import java.net.URLConnection;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 import org.egov.bpa.config.BPAConfiguration;
 import org.egov.bpa.repository.BPARepository;
+import org.egov.bpa.repository.IdGenRepository;
 import org.egov.bpa.util.BPAConstants;
 import org.egov.bpa.util.BPAErrorConstants;
 import org.egov.bpa.util.BPAUtil;
@@ -30,6 +32,7 @@ import org.egov.bpa.web.model.BPARequest;
 import org.egov.bpa.web.model.BPASearchCriteria;
 import org.egov.bpa.web.model.Floor;
 import org.egov.bpa.web.model.Workflow;
+import org.egov.bpa.web.model.idgen.IdResponse;
 import org.egov.bpa.web.model.landInfo.LandInfo;
 import org.egov.bpa.web.model.landInfo.LandSearchCriteria;
 import org.egov.bpa.web.model.user.UserDetailResponse;
@@ -94,6 +97,9 @@ public class BPAService {
     @Autowired
     private WorkflowService workflowService;
 
+	@Autowired
+	private IdGenRepository idGenRepository;
+
     @Autowired
     private NotificationUtil notificationUtil;
 
@@ -136,7 +142,7 @@ public class BPAService {
         if (!StringUtils.isEmpty(bpaRequest.getBPA().getApprovalNo())) {
             bpaRequest.getBPA().setApprovalNo(null);
         }
-
+		bpaRequest.getBPA().setApplicationDate(Calendar.getInstance().getTimeInMillis());
 
       //  values = edcrService.validateEdcrPlan(bpaRequest, mdmsData);
 
@@ -511,10 +517,20 @@ public class BPAService {
 
 		case "SUBMIT_REPORT":
 //			Object mdmsData = util.mDMSCall(requestInfo, tenantId);
-	        nocService.createNocRequest(bpaRequest, mdmsData);
-            enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
-            wfIntegrator.callWorkFlow(bpaRequest);
-            repository.update(bpaRequest, BPAConstants.UPDATE);
+			bpaRequest.getBPA().setPlanningPermitNo(getPlanningPermitNo(bpaRequest));
+			bpaRequest.getBPA().setPlanningPermitDate(Calendar.getInstance().getTimeInMillis());
+			nocService.createNocRequest(bpaRequest, mdmsData);
+			enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
+			wfIntegrator.callWorkFlow(bpaRequest);
+			repository.update(bpaRequest, BPAConstants.UPDATE);
+			break;
+
+		case "PAY":// CITIZEN_FINAL_PAYMENT
+			bpaRequest.getBPA().setBuildingPermitNo(getBuildingPermitNo(bpaRequest));
+			bpaRequest.getBPA().setBuildingPermitDate(Calendar.getInstance().getTimeInMillis());
+			enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
+			wfIntegrator.callWorkFlow(bpaRequest);
+			repository.update(bpaRequest, BPAConstants.UPDATE);
 			break;
 
 		default:
@@ -589,6 +605,32 @@ public class BPAService {
          */
 
     }
+
+	private String getPlanningPermitNo(BPARequest bpaRequest) {
+
+		List<IdResponse> idResponses = idGenRepository
+				.getId(bpaRequest.getRequestInfo(), bpaRequest.getBPA().getTenantId(),
+						config.getPlanningPermitIdgenName(), config.getPlanningPermitIdgenFormat(), 1)
+				.getIdResponses();
+
+		if (idResponses!=null && !idResponses.isEmpty())
+			return idResponses.get(0).getId();
+
+		return "";
+	}
+
+	private String getBuildingPermitNo(BPARequest bpaRequest) {
+
+		List<IdResponse> idResponses = idGenRepository
+				.getId(bpaRequest.getRequestInfo(), bpaRequest.getBPA().getTenantId(),
+						config.getBuildingPermitIdgenName(), config.getBuildingPermitIdgenFormat(), 1)
+				.getIdResponses();
+
+		if (!idResponses.isEmpty())
+			return idResponses.get(0).getId();
+
+		return "";
+	}
 
     /**
      * handle the reject and Send Back action of the update
