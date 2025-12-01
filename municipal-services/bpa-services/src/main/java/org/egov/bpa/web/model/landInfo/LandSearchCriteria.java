@@ -39,11 +39,14 @@ public class LandSearchCriteria {
     @JsonProperty("locality")
     private String locality;
 
+    @JsonProperty("name")
+    private String name;
+
     public boolean isEmpty() {
-        return (this.tenantId == null && this.ids == null && this.landUId == null && this.mobileNumber == null && locality == null);
+        return (this.tenantId == null && this.ids == null && this.landUId == null && this.mobileNumber == null && this.name==null && locality == null);
     }
 
     public boolean tenantIdOnly() {
-        return (this.tenantId != null && this.ids == null && this.landUId == null && this.mobileNumber == null && locality == null);
+        return (this.tenantId != null && this.ids == null && this.landUId == null && this.mobileNumber == null && this.name==null && locality == null);
     }
 }

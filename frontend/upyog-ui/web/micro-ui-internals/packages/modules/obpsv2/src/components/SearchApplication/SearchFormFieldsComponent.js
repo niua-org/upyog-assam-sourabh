@@ -68,7 +68,7 @@ const SearchFormFieldsComponent = ({ formState, Controller, register, control, t
       
       <SearchField>
         <label>{t("APPLICANT_NAME")}</label>
-        <TextInput name="applicantName" inputRef={register({})} />
+        <TextInput name="name" inputRef={register({})} />
       </SearchField>
       
       <SearchField>
@@ -117,7 +117,7 @@ const SearchFormFieldsComponent = ({ formState, Controller, register, control, t
             reset({
               applicationNo: "",
               mobileNumber: "",
-              applicantName: "",
+              name: "",
               fromDate: "",
               toDate: "",
               status: "",

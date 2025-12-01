@@ -63,18 +63,22 @@ public class BPASearchCriteria {
 
     private String riskType;
 
+    private String name;
+
+    private String district;
+
     public boolean isEmpty() {
         return (this.tenantId == null && this.status == null && this.ids == null && this.applicationNo == null
-                && this.mobileNumber == null && this.landId == null && this.edcrNumber == null && this.approvalNo == null
-                && this.approvalDate == null && this.ownerIds == null
+                && this.mobileNumber == null && this.name == null && this.landId == null && this.edcrNumber == null && this.approvalNo == null
+                && this.approvalDate == null && this.ownerIds == null && this.district == null
                 && this.businessService == null && this.locality == null && this.applicationType == null && this.serviceType == null
                 && this.permitNumber == null);
     }
 
     public boolean tenantIdOnly() {
         return (this.tenantId != null && this.status == null && this.ids == null && this.applicationNo == null
-                && this.mobileNumber == null && this.landId == null && this.edcrNumber == null && this.approvalNo == null
-                && this.approvalDate == null && this.ownerIds == null
+                && this.mobileNumber == null && this.name == null && this.landId == null && this.edcrNumber == null && this.approvalNo == null
+                && this.approvalDate == null && this.ownerIds == null && this.district == null
                 && this.businessService == null && this.locality == null && this.applicationType == null && this.serviceType == null
                 && this.permitNumber == null);
     }

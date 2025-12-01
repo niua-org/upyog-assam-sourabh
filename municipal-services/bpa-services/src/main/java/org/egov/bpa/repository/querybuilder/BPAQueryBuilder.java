@@ -137,6 +137,14 @@ public class BPAQueryBuilder {
             addToPreparedStatement(preparedStmtList, approvalNos);
         }
 
+        String district = criteria.getDistrict();
+        if (district != null) {
+            List<String> districts = Arrays.asList(district.split(","));
+            addClauseIfRequired(preparedStmtList, builder);
+            builder.append(" area.district IN (").append(createQuery(districts)).append(")");
+            addToPreparedStatement(preparedStmtList, districts);
+        }
+
         String status = criteria.getStatus();
         if (status != null) {
             List<String> statuses = Arrays.asList(status.split(","));
