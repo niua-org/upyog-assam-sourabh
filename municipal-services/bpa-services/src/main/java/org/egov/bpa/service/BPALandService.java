@@ -146,6 +146,12 @@ public class BPALandService {
 			uri.append("&").append("&mobileNumber=");
 			uri.append(landcriteria.getMobileNumber());
 		}
+		else if (landcriteria.getName() != null) {
+			log.info("Land Criterail as Follows: {}",landcriteria.getName());
+			landSearchCriteria.setName(landcriteria.getName());
+			uri.append("&name=");
+			uri.append(landcriteria.getName());
+		}
 		if(landcriteria.getLocality() != null) {
 		    landSearchCriteria.setLocality(landcriteria.getLocality());
                     uri.append("&").append("&locality=");

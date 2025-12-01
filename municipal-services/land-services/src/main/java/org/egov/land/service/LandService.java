@@ -125,6 +125,18 @@ public class LandService {
 			criteria.setMobileNumber(null);
 			criteria.setIds(landIds);
 		}
+		// Handle name search - get users by name and convert to land IDs (similar to mobile number search)
+		if (criteria.getName() != null) {
+			landInfos = getLandFromName(criteria, requestInfo);
+			if (landInfos.isEmpty())
+				return Collections.emptyList();
+			List<String> landIds = new ArrayList<String>();
+			for (LandInfo li : landInfos) {
+				landIds.add(li.getId());
+			}
+			criteria.setName(null);
+			criteria.setIds(landIds);
+		}
 
 		landInfos = fetchLandInfoData(criteria, requestInfo);
 
@@ -150,6 +162,39 @@ public class LandService {
 			criteria.setUserIds(ids);
 		}
 
+		landInfo = repository.getLandInfoData(criteria);
+
+		if (landInfo.size() == 0) {
+			return Collections.emptyList();
+		}
+		enrichmentService.enrichLandInfoSearch(landInfo, criteria, requestInfo);
+		return landInfo;
+	}
+
+	/**
+	 * Fetches land records based on owner name by first getting user UUIDs from user service
+	 * then querying land records with those UUIDs (similar to mobile number search flow)
+	 *
+	 * @param criteria The search criteria containing the name
+	 * @param requestInfo The request info
+	 * @return List of LandInfo matching the owner name
+	 */
+	private List<LandInfo> getLandFromName(LandSearchCriteria criteria, RequestInfo requestInfo) {
+		List<LandInfo> landInfo = new LinkedList<>();
+		UserDetailResponse userDetailResponse = userService.getUserByName(criteria, requestInfo);
+
+		// If no users found with given name, return empty list
+		if (userDetailResponse.getUser().size() == 0) {
+			return Collections.emptyList();
+		} else {
+			// Extract user UUIDs to search land records
+			List<String> ids = new ArrayList<String>();
+			for(int i=0; i<userDetailResponse.getUser().size();i++){
+				ids.add(userDetailResponse.getUser().get(i).getUuid());
+			}
+			criteria.setUserIds(ids);
+		}
+       // Get land records for the user UUIDs
 		landInfo = repository.getLandInfoData(criteria);
 
 		if (landInfo.size() == 0) {

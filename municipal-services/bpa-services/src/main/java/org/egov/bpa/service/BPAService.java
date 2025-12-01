@@ -242,6 +242,8 @@ public class BPAService {
         List<String> edcrNos = null;
         if (criteria.getMobileNumber() != null) {
             bpas = this.getBPAFromMobileNumber(criteria, landcriteria, requestInfo);
+        }else if (criteria.getName() != null) {
+            bpas = this.getBPAFromApplicantName(criteria, landcriteria, requestInfo);
         } else {
             List<String> roles = new ArrayList<>();
             for (Role role : requestInfo.getUserInfo().getRoles()) {
@@ -420,6 +422,38 @@ public class BPAService {
         }
         return bpa;
     }
+
+
+    // Search the Land from name and then from BPA after extracting teh land id
+    private List<BPA> getBPAFromApplicantName(BPASearchCriteria criteria, LandSearchCriteria landcriteria, RequestInfo requestInfo) {
+        List<BPA> bpas = new LinkedList<>();
+
+        landcriteria.setName(criteria.getName());
+        ArrayList<LandInfo> landInfo = landService.searchLandInfoToBPA(requestInfo, landcriteria);
+        ArrayList<String> landId = new ArrayList<>();
+        if (!landInfo.isEmpty()) {
+            landInfo.forEach(land -> landId.add(land.getId()));
+            criteria.setLandId(landId);
+        }
+
+        String tenantId = criteria.getTenantId();
+        if (landInfo.isEmpty() && !tenantId.isEmpty() && tenantId != null) {
+            return bpas;
+        }
+
+        bpas = getBPAFromLandId(criteria, requestInfo, null);
+        if (!landInfo.isEmpty()) {
+            for (int i = 0; i < bpas.size(); i++) {
+                for (int j = 0; j < landInfo.size(); j++) {
+                    if (landInfo.get(j).getId().equalsIgnoreCase(bpas.get(i).getLandId())) {
+                        bpas.get(i).setLandInfo(landInfo.get(j));
+                    }
+                }
+            }
+        }
+        return bpas;
+    }
+
 
 
     /**
@@ -891,6 +925,15 @@ public class BPAService {
         List<String> edcrNos = null;
         if (criteria.getMobileNumber() != null) {
             landcriteria.setMobileNumber(criteria.getMobileNumber());
+            ArrayList<LandInfo> landInfo = landService.searchLandInfoToBPA(requestInfo, landcriteria);
+            ArrayList<String> landId = new ArrayList<>();
+            if (!landInfo.isEmpty()) {
+                landInfo.forEach(land -> landId.add(land.getId()));
+                criteria.setLandId(landId);
+            }
+        } else if (criteria.getName() != null) {
+            //To Update the Counter
+            landcriteria.setName(criteria.getName());
             ArrayList<LandInfo> landInfo = landService.searchLandInfoToBPA(requestInfo, landcriteria);
             ArrayList<String> landId = new ArrayList<>();
             if (!landInfo.isEmpty()) {

@@ -363,6 +363,37 @@ public class LandUserService {
 	}
 
 	/**
+	 * Searches users by name in user service (similar to mobile number search)
+	 *
+	 * @param criteria The search criteria containing the name
+	 * @param requestInfo The request info
+	 * @return UserDetailResponse containing users matching the name
+	 */
+	public UserDetailResponse getUserByName(LandSearchCriteria criteria, RequestInfo requestInfo) {
+		UserSearchRequest userSearchRequest = getUserSearchRequestByName(criteria, requestInfo);
+		StringBuilder uri = new StringBuilder(config.getUserHost()).append(config.getUserSearchEndpoint());
+		UserDetailResponse userDetailResponse = userCall(userSearchRequest, uri);
+		return userDetailResponse;
+	}
+
+	/**
+	 * Creates UserSearchRequest for name-based search (similar to mobile number search request)
+	 *
+	 * @param criteria The search criteria containing the name
+	 * @param requestInfo The request info
+	 * @return UserSearchRequest configured for name search
+	 */
+	private UserSearchRequest getUserSearchRequestByName(LandSearchCriteria criteria, RequestInfo requestInfo) {
+		UserSearchRequest userSearchRequest = new UserSearchRequest();
+		userSearchRequest.setRequestInfo(requestInfo);
+		userSearchRequest.setTenantId(centralInstanceUtil.getStateLevelTenant(criteria.getTenantId()));
+		userSearchRequest.setName(criteria.getName());
+		userSearchRequest.setActive(true);
+		userSearchRequest.setUserType(LandConstants.CITIZEN);
+		return userSearchRequest;
+	}
+
+	/**
 	 * Creates userSearchRequest from bpaSearchCriteria
 	 * 
 	 * @param criteria
