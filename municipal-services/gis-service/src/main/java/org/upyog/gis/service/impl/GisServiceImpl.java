@@ -58,6 +58,10 @@ public class GisServiceImpl implements GisService {
     @Override
     public GISResponse findZoneFromGeometry(MultipartFile file, GISRequestWrapper gisRequestWrapper) throws Exception {
         GISRequest gisRequest = gisRequestWrapper.getGisRequest();
+
+        String transformedTenantId = extractUlbName(gisRequest.getTenantId());
+        gisRequest.setTenantId(transformedTenantId);
+
         String fileStoreId = null;
         double latitude = 0.0;
         double longitude = 0.0;
@@ -159,6 +163,18 @@ public class GisServiceImpl implements GisService {
     }
 
     /**
+     * Extracts ULB name from tenantId by removing state prefix.
+     * Example: "as.tinsukia" -> "tinsukia", "as.ghoungoorgp" -> "ghoungoorgp"
+     */
+    private String extractUlbName(String tenantId) {
+        if (tenantId != null && tenantId.contains(".")) {
+            String[] parts = tenantId.split("\\.");
+            return parts[parts.length - 1];
+        }
+        return tenantId;
+    }
+
+    /**
      * Validates the uploaded polygon file
      */
     private void validatePolygonFile(MultipartFile file) {
@@ -224,29 +240,12 @@ public class GisServiceImpl implements GisService {
 
     /**
      * Searches GIS logs based on provided search criteria.
-     * 
-     * <p>This method retrieves GIS processing logs from the database using various filter parameters
-     * such as tenant ID, application number, RTPI ID, and status. It supports pagination through
-     * limit and offset parameters in the criteria object.</p>
-     * 
-     * <p>TenantId is mandatory and validated via @NotNull annotation. Other parameters are optional.</p>
-     *
-     * @param criteria the search criteria containing filter parameters and pagination settings
      * @return list of GisLog objects matching the search criteria
      */
     @Override
     public List<GisLog> searchGisLog(GisLogSearchCriteria criteria) {
         log.info("Searching GIS logs with criteria: {}", criteria);
-        List<GisLog> logs = logRepository.search(criteria);
-
-        logs.forEach(log -> {
-            if(log.getTenantId() != null && log.getTenantId().contains(".")){
-                String[] ulbName = log.getTenantId().split("\\.");
-                log.setTenantId(ulbName[ulbName.length -1]);
-            }
-        });
-
-        return logs;
+        return logRepository.search(criteria);
     }
 
 
