@@ -44,22 +44,6 @@ export const convertEpochToDate = (dateEpoch) => {
 
   const { label } = Digit.Hooks.useApplicationsForBusinessServiceSearch({ businessService: business_service }, { enabled: false });
 
-  // const { data: reciept_data, isLoading: recieptDataLoading } = Digit.Hooks.useRecieptSearch(
-  //   {
-  //     tenantId,
-  //     businessService: business_service,
-  //     receiptNumbers: data?.payments?.Payments?.[0]?.paymentDetails[0].receiptNumber,
-  //   },
-  //   {
-  //     retry: false,
-  //     staleTime: Infinity,
-  //     refetchOnWindowFocus: false,
-  //     select: (dat) => {
-  //       return dat.Payments[0];
-  //     },
-  //     enabled: allowFetchBill,
-  //   }
-  // );
 
   const payments = data?.payments;
 
@@ -115,7 +99,6 @@ export const convertEpochToDate = (dateEpoch) => {
   }
 
   const paymentData = data?.payments?.Payments[0];
-  // const amount = reciept_data?.paymentDetails?.[0]?.totalAmountPaid;
   const transactionDate = paymentData?.transactionDate;
 
 
