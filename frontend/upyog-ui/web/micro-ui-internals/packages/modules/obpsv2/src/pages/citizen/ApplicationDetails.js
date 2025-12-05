@@ -249,7 +249,8 @@ import {
     setTimeout(() => setToast(false), 1000);
   } catch (err) {
     console.error("Error while assigning:", err);
-    setToast(true);
+    setActionError(t("CS_ACTION_ASSIGN_RTPS_FAILED"));
+    setTimeout(() => setActionError(null), 3000);
   }
   }
   async function onrtpChange(comments) {
@@ -304,7 +305,8 @@ import {
     setTimeout(() => setToast(false), 1000);
   } catch (err) {
     console.error("Error while assigning:", err);
-    setToast(true);
+    setActionError(t("CS_ACTION_ASSIGN_RTPS_FAILED"));
+    setTimeout(() => setActionError(null), 3000);
   }
   }
 }
@@ -1756,7 +1758,7 @@ import {
                 }}
               />
             )}
-            {toast && <Toast label={t(assignResponse ? `CS_ACTION_UPDATE_${selectedAction ? selectedAction : "RTP_CHANGED"}_TEXT` : "CS_ACTION_ASSIGN_FAILED")} onClose={closeToast} />}
+            {toast && assignResponse && <Toast label={t(`CS_ACTION_UPDATE_${selectedAction ? selectedAction : "RTP_CHANGED"}_TEXT`)} onClose={closeToast} />}
              {hasAccess && <ActionBar>
               {displayMenu && workflowDetails?.ProcessInstances?.[0]?.nextActions ? (
                   <Menu options={workflowDetails?.ProcessInstances?.[0]?.nextActions.map((action) => action.action)} t={t} onSelect={onActionSelect} />
